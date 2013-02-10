@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <FrameLayout
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+        <com.google.android.maps.MapView
+        android:id="@+id/mapView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:clickable="true"
+        android:apiKey="0-YTgCljzjMmOX3n5aDL4Tu5s4wYWPZikb6Bugg"/>
+
+        <Button
+            android:id="@+id/updateLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="5dp"
+            android:text="@string/button_mylocation"
+            android:textStyle="bold" />
+
+    </FrameLayout>
+</LinearLayout>
