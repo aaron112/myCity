@@ -2,6 +2,8 @@ package edu.ucsd.mycity;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -16,6 +18,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.util.List;
 
@@ -30,7 +33,7 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener{
 	/**
 	 * Determines whether to always show the simplified settings UI, where
 	 * settings are presented in a single list. When false, settings are shown
@@ -122,7 +125,7 @@ public class SettingsActivity extends PreferenceActivity {
 	/**
 	 * A preference value change listener that updates the preference's summary
 	 * to reflect its new value.
-	 */
+	 
 	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
 		@Override
 		public boolean onPreferenceChange(Preference preference, Object value) {
@@ -179,7 +182,7 @@ public class SettingsActivity extends PreferenceActivity {
 	 * dependent on the type of preference.
 	 * 
 	 * @see #sBindPreferenceSummaryToValueListener
-	 */
+	 
 	private static void bindPreferenceSummaryToValue(Preference preference) {
 		// Set the listener to watch for value changes.
 		preference
@@ -197,7 +200,7 @@ public class SettingsActivity extends PreferenceActivity {
 	/**
 	 * This fragment shows general preferences only. It is used when the
 	 * activity is showing a two-pane settings UI.
-	 */
+	 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment extends PreferenceFragment {
 		@Override
@@ -213,5 +216,42 @@ public class SettingsActivity extends PreferenceActivity {
 			bindPreferenceSummaryToValue(findPreference("gtalk_password"));
 			bindPreferenceSummaryToValue(findPreference("update_interval"));
 		}
+	}
+*/
+	
+	protected void onResume() {
+	    super.onResume();
+	    getPreferenceScreen().getSharedPreferences()
+	            .registerOnSharedPreferenceChangeListener(this);
+	}
+
+	@Override
+	protected void onPause() {
+	    super.onPause();
+	    getPreferenceScreen().getSharedPreferences()
+	            .unregisterOnSharedPreferenceChangeListener(this);
+	}
+	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+			String key) 
+	{
+		if(key.equals("pref_gtalk_username"))
+		{
+			OptionsContainer.setGUsername(sharedPreferences.getString(key, ""));
+			Log.d("OptionsContainer getGUsername", "GUsername: " +OptionsContainer.getGUsername());
+		}
+		else if(key.equals("pref_gtalk_password"))
+		{
+			OptionsContainer.setGPassword(sharedPreferences.getString(key, ""));
+			Log.d("OptionsContainer getGPassword", "GPassword: " +OptionsContainer.getGPassword());
+		}
+		else if(key.equals("pref_update_interval"))
+		{
+			OptionsContainer.setUpdateInterval(Integer.parseInt(sharedPreferences.getString(key, "")));
+			Log.d("OptionsContainer getUpdateInterval", "Update Interval: " +OptionsContainer.getUpdateInterval());
+
+		}
+		
 	}
 }
