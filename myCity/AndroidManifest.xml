@@ -40,6 +40,10 @@
             android:name="edu.ucsd.mycity.BuddyList"
             android:label="@string/title_activity_buddy_list" >
         </activity>
+        <activity
+            android:name="edu.ucsd.mycity.SettingsActivity"
+            android:label="@string/title_activity_settings" >
+        </activity>
     </application>
 
 </manifest>

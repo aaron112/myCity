@@ -171,7 +171,7 @@ public class Map extends MapActivity implements LocationListener{
 	    	return true;
 	    	
 	    case R.id.menu_settings:
-	    	//startActivity(new Intent(this, Help.class));
+	    	startActivity(new Intent(this, SettingsActivity.class));
 	    	return true;
 	    	
 	    default:
