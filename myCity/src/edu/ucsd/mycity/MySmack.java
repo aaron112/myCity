@@ -112,43 +112,4 @@ public class MySmack {
 			return chatContent;
 	}
 	
-	
-	/* Section-4 */
-	// An exercise: consider the example in Section-3, what if we want to
-	// be able to process the string according to the regular expression
-	// specified by the developers? For example, your developers may want
-	// to have the flexibility to pass this method a regular expression, 
-	// which can be: 
-	//		regex1, regex2, ..., or regexN
-	// according to which, the transformation process can be:
-	//		transform1(string), transform2(string), ..., transformN(string)
-	// Define your own usage format, and write down your *pseudo-code*
-	
-	// Your *pseudo-code* here
-	
-	/*public static String processAppointment(Packet packet, String regex)
-	{
-		Message message = (Message) packet;
-		String chatContent = message.getBody();
-		
-		if (chatContent.matches(regex)) 
-		{
-			return transform(chatContent);
-		}
-		else
-			return chatContent;
-	}*/
-	
-	/* Section-5 */
-	// Answer this: assuming the chat content can be an XML format string
-	// for special purposes, can you process it in the way you did in the
-	// above two sections, i.e., try to define a regular expression, match
-	// and then process the string?
-	// If you answer "yes", tell us how would you do that;
-	// if you answer "no", tell us why, and what would you do alternatively.
-
-	/*
-	 * No, XML cannot be parsed using regular expression because XML is not regular.
-	 * If we want to process XML, we have to use an XML parser
-	 */
 }

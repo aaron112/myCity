@@ -2,14 +2,17 @@ package edu.ucsd.mycity;
 
 import java.util.List;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +27,7 @@ import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
 public class Map extends MapActivity implements LocationListener{
+	// This is MainActivity
 	
 	private MapController mapController;
 	private MapView mapView;
@@ -38,6 +42,8 @@ public class Map extends MapActivity implements LocationListener{
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		GTalkHandler.prefs = getApplicationContext().getSharedPreferences("edu.ucsd.mycity_preferences", 0);
+		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_map);
 		
@@ -59,12 +65,12 @@ public class Map extends MapActivity implements LocationListener{
             }
         });
         
+	    if ( checkConfig() ) {
+	    	GTalkConnect();
+	    }
 	}
 
 	@Override
-	/**
-	 * - add chat list here!!
-	 */
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_map, menu);
@@ -143,12 +149,26 @@ public class Map extends MapActivity implements LocationListener{
 	protected void onResume() {
 	    super.onResume();
 	    locationManager.requestLocationUpdates(getBestProvider(), 1000, 1, this);
+	    
+	    //if ( checkConfig() && !GTalkHandler.connection.isConnected() ) {
+	    //	GTalkConnect();
+	    //}
 	}
 	
 	@Override
 	protected void onPause() {
 	    super.onPause();
 	    locationManager.removeUpdates(this);
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		try {
+			GTalkHandler.connection.disconnect();
+	    } catch (Exception e) {
+
+	    }
 	}
 	
 	public void drawCurrPositionOverlay(){
@@ -167,15 +187,101 @@ public class Map extends MapActivity implements LocationListener{
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 	    case R.id.menu_buddyList:
-	    	startActivity(new Intent(this, ChatActivity.class));
+	    	startActivity(new Intent(this, BuddyList.class));
+	    	return true;
+	    
+	    case R.id.menu_forceupdate:
+	    	// TODO: Force update
+    		Toast.makeText(this, "Force Update Invoked. (TODO)", Toast.LENGTH_LONG).show();
 	    	return true;
 	    	
 	    case R.id.menu_settings:
 	    	startActivity(new Intent(this, SettingsActivity.class));
 	    	return true;
 	    	
+	    case R.id.menu_login:
+	    	if ( GTalkHandler.connection.isAuthenticated() )
+	    		Toast.makeText(this, "Already Logged in!", Toast.LENGTH_LONG).show();
+	    	else {
+	    		if ( checkConfig() ) {
+	    	    	GTalkConnect();
+	    	    }
+	    	}
+	    	return true;
+	    
+	    case R.id.menu_logout:
+	    	try {
+				GTalkHandler.connection.disconnect();
+		    } catch (Exception e) {
+
+		    }
+	    	Toast.makeText(this, "Logged out of Google Talk.", Toast.LENGTH_LONG).show();
+	    	return true;
+	    
+	    case R.id.menu_chat:
+	    	// TODO: DEBUG ONLY
+	    	startActivity(new Intent(this, ChatActivity.class));
+	    	return true;
+	    	
 	    default:
 	    	return super.onOptionsItemSelected(item);
 	    }
 	}
+	
+	
+	
+	// Helpers -------------------------------------------------------------
+	public void GTalkConnect() {
+		final ProgressDialog dialog = ProgressDialog.show(this, "Connecting...", "Please wait...", false);
+        
+	    Thread t = new Thread(new Runnable() {
+	      	public void run() {
+	      		if ( GTalkHandler.connect() ) {
+	    			Log.i("GTalkHandler",  "Logged in as" + GTalkHandler.connection.getUser());
+	    			GTalkHandler.setupConnection();
+	    			GTalkHandler.updateRoaster();
+	    			
+	    			runOnUiThread(new Runnable() {
+	                    public void run() {
+	                    	Toast.makeText(Map.this, "Logged in as" + GTalkHandler.connection.getUser(), Toast.LENGTH_LONG).show();
+	                    }
+	                });
+	    		} else {
+	    			if ( GTalkHandler.connection.isConnected() ) {
+		    			runOnUiThread(new Runnable() {
+		                    public void run() {
+		                    	Toast.makeText(Map.this, "Unable to login to Google Talk. Please check your username and password.", Toast.LENGTH_LONG).show();
+		                    }
+		                });
+	    			} else {
+	    				runOnUiThread(new Runnable() {
+		                    public void run() {
+		                    	Toast.makeText(Map.this, "Unable to connect to Google Talk. Please check your internet connection.", Toast.LENGTH_LONG).show();
+		                    }
+		                });
+	    			}
+	    		}
+	      		
+	    		dialog.dismiss();
+	    	}
+	    });
+	    t.start();
+	    dialog.show();
+	  }
+	  
+	// Returns true if config is okay.
+	private boolean checkConfig() {
+		// Check pref for username and password, if undefined, direct user to Settings activity.
+		SharedPreferences prefs = getApplicationContext().getSharedPreferences("edu.ucsd.mycity_preferences", 0);
+        if ( prefs.getString("gtalk_username", "").equals("") || prefs.getString("gtalk_password", "").equals("") ) {
+        	// Directs user to Settings activity
+        	Toast.makeText(this, "Please Specify Google Talk Username and Password", Toast.LENGTH_LONG).show();
+        	startActivity(new Intent(this, SettingsActivity.class));
+        	
+        	return false;
+        }
+        
+        return true;
+	}
+	
 }

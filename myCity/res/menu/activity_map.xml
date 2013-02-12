@@ -1,14 +1,39 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item
-        android:id="@+id/menu_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/menu_settings"/>
 
     <item
         android:id="@+id/menu_buddyList"
-        android:orderInCategory="100"
+        android:orderInCategory="10"
         android:showAsAction="never"
-        android:title="Buddy List"/>
+        android:title="@string/menu_buddyList"/>
+    
+    <item
+        android:id="@+id/menu_forceupdate"
+        android:orderInCategory="20"
+        android:showAsAction="never"
+        android:title="@string/menu_forceupdate"/>
+    
+    <item
+        android:id="@+id/menu_settings"
+        android:orderInCategory="30"
+        android:showAsAction="never"
+        android:title="@string/menu_settings"/>
+        
+    <item
+        android:id="@+id/menu_login"
+        android:orderInCategory="30"
+        android:showAsAction="never"
+        android:title="@string/menu_login"/> 
+           
+    <item
+        android:id="@+id/menu_logout"
+        android:orderInCategory="30"
+        android:showAsAction="never"
+        android:title="@string/menu_logout"/>
+    
+    <item
+        android:id="@+id/menu_chat"
+        android:orderInCategory="40"
+        android:showAsAction="never"
+        android:title="Chat (DEBUG ONLY)"/>
 </menu>

@@ -236,7 +236,8 @@ public class SettingsActivity extends PreferenceActivity implements OnSharedPref
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) 
 	{
-		if(key.equals("pref_gtalk_username"))
+		// Just a place holder - no longer needed
+		/*if(key.equals("pref_gtalk_username"))
 		{
 			OptionsContainer.setGUsername(sharedPreferences.getString(key, ""));
 			Log.d("OptionsContainer getGUsername", "GUsername: " +OptionsContainer.getGUsername());
@@ -251,7 +252,7 @@ public class SettingsActivity extends PreferenceActivity implements OnSharedPref
 			OptionsContainer.setUpdateInterval(Integer.parseInt(sharedPreferences.getString(key, "")));
 			Log.d("OptionsContainer getUpdateInterval", "Update Interval: " +OptionsContainer.getUpdateInterval());
 
-		}
+		}*/
 		
 	}
 }
