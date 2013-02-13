@@ -1,65 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent"
-  android:orientation="vertical" >
-
-  <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal" >
+    android:layout_height="fill_parent"
+    android:paddingTop="10dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:paddingBottom="10dp" >
 
     <TextView
+      android:id="@+id/chating_with_text"
+      android:layout_alignParentTop="true"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:minWidth="70dp"
-      android:text="Chat With"
+      android:text="Chating With: "
       android:textStyle="bold" />
-
-    <EditText
-      android:id="@+id/toET"
+    
+    
+    <Spinner
+        android:id="@+id/chating_with"
+		android:layout_toRightOf="@+id/chating_with_text"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+     
+      
+    <!-- 
+    <TextView
+      android:id="@+id/recipient"
+      android:layout_toRightOf="@+id/chating_with"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:hint="Add Recipient"
-      android:minWidth="250dp"
-      android:scrollHorizontally="true"
-      android:singleLine="true"
-      android:textSize="16sp" />
-  </LinearLayout>
+      android:minWidth="70dp"
+      android:text=""
+      android:textStyle="bold" />
+ -->
+ 
+	<ListView
+      android:id="@+id/listMessages"
+      android:layout_width="wrap_content"
+      android:layout_height="fill_parent"
+      android:layout_below="@+id/chating_with"
+      android:scrollbars="horizontal"
+      android:layout_above="@+id/bottomLayout" />
+	
 
-  <ListView
-    android:id="@+id/listMessages"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_weight="1"
-    android:scrollbars="horizontal" />
-
-  <LinearLayout
-    android:id="@+id/linearLayout2"
+    <LinearLayout
+    android:id="@+id/bottomLayout"
+    android:layout_alignParentBottom="true"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:gravity="bottom"
     android:orientation="horizontal" >
 
-    <EditText
-      android:id="@+id/chatET"
-      android:layout_width="0dip"
-      android:layout_height="wrap_content"
-      android:layout_weight="1"
-      android:gravity="top"
-      android:hint="Type to compose"
-      android:scrollHorizontally="true" >
-    </EditText>
-
-    <Button
-      android:id="@+id/sendBtn"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginLeft="5dp"
-      android:layout_marginRight="5dp"
-      android:layout_marginTop="5dp"
-      android:text="Send"
-      android:textStyle="bold" />
+	    <EditText
+	      android:id="@+id/chatET"
+	      android:layout_width="0dip"
+	      android:layout_height="wrap_content"
+	      android:layout_weight="1"
+	      android:gravity="top"
+	      android:hint="Type to compose"
+	      android:scrollHorizontally="true" >
+	    </EditText>
+	
+	    <Button
+	      android:id="@+id/sendBtn"
+	      android:layout_width="wrap_content"
+	      android:layout_height="wrap_content"
+	      android:layout_marginLeft="5dp"
+	      android:layout_marginRight="5dp"
+	      android:layout_marginTop="5dp"
+	      android:text="Send"
+	      android:textStyle="bold" />
   </LinearLayout>
-</LinearLayout>
+    
+</RelativeLayout>

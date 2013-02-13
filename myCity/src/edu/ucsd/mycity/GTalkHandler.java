@@ -1,116 +1,185 @@
 package edu.ucsd.mycity;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.filter.MessageTypeFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
-import android.content.SharedPreferences;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Messenger;
 import android.util.Log;
 
+/**
+ * This works as an adapter between Activities and GTalkService
+ * @author Aaron
+ *
+ */
+
 public class GTalkHandler {
-	public static final String HOST = "talk.google.com";
-	public static final int PORT = 5222;
-	public static final String SERVICE = "gmail.com";
+	private static final String TAG = "GTalkHandler";
+	public static Context context;
 	
-	public static SharedPreferences prefs;
-	public static Roster roster;
+	private static ArrayList<ChatClient> observers = new ArrayList<ChatClient>();
 	
-	//public static final String USERNAME = "cse110winter2013@gmail.com";
-	//public static final String PASSWORD = "billgriswold";
+	// Handler for GTalkService
+	private static Handler mHandler = new Handler() {
+		@Override
+		public void handleMessage(android.os.Message msg) {
+			Bundle b = msg.getData();
+			notifyObservers( b.getString("contact") );
+		}
+	};
+	  
+	static GTalkService mService = null;
+	static boolean isServiceStarted = false;
 	
-	public static XMPPConnection connection;
+	private static ServiceConnection mConn = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName className, IBinder binder) {
+			Log.d(TAG, "Connected to service.");
+			mService = ((GTalkService.LocalBinder) binder).getService();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName className) {
+			Log.d(TAG, "Disconnected from service.");
+			mService = null;
+			isServiceStarted = false;
+		}
+	};
+	
+	// Subject in Observer Pattern
+	public static void registerObserver(ChatClient o) {
+		observers.add(o);
+	}
+
+	public static void removeObserver(ChatClient o) {
+		int i = observers.indexOf(o);
+		if (i >= 0) {
+			observers.remove(i);
+		}
+	}
+
+	public static void notifyObservers(String from) {
+		for (int i = 0; i < observers.size(); ++i) {
+			ChatClient observer = (ChatClient)observers.get(i);
+			observer.onUpdate(from);
+		}
+	}
+	
+	public static void newMessageReceived(String from) {
+		notifyObservers(from);
+	}
+	
+	
+	public static void startService() {
+		Log.d(TAG, "Attempting to start service.");
+		
+		Intent intent = new Intent(context, GTalkService.class);
+		intent.putExtra("callbackMessenger", new Messenger(mHandler));
+		
+		context.startService(intent);
+		context.bindService(intent, mConn, Context.BIND_AUTO_CREATE);
+		isServiceStarted = true;
+	}
+	
+	public static void stopService() {
+		isServiceStarted = false;
+		context.unbindService(mConn);
+		context.stopService(new Intent(context, GTalkService.class));
+	}
+	
+	public static boolean isConnected() {
+		if ( isServiceStarted )
+			return mService.isConnected();
+		return false;
+	}
+	
+	public static boolean isAuthenticated() {
+		if ( isServiceStarted )
+			return mService.isAuthenticated();
+		return false;
+	}
 	
 	// Connect to GTalk XMPP Server, returns true if successful
 	public static boolean connect() {
-		// Read Config
-	    String username = prefs.getString("gtalk_username", "");
-	    String password = prefs.getString("gtalk_password", "");
-	    
-	    ConnectionConfiguration connConfig = new ConnectionConfiguration(HOST, PORT, SERVICE);
-		connection = new XMPPConnection(connConfig);
-		try {
-			connection.connect();
-			Log.i("GTalkHandler - Connection", "Connected to " + connection.getHost());
-		} catch (XMPPException e) {
-			Log.e("GTalkHandler - Connection", "Failed to connect to Gtalk server.");
-			return false;
+		// Start Service if not started, then call to connect method
+		if ( !isServiceStarted )
+			startService();
+		
+		while ( mService == null ) {}
+		
+		Log.d(TAG, "DEBUG: mService: " + mService);
+		
+		if ( mService.isAuthenticated() )
+			return true;
+		
+		if ( mService.connect() ) {
+			mService.setupConnection();
+			mService.updateRoaster();
 		}
-		try {
-			connection.login(username, password);
-			Log.i("GTalkHandler - Logging in", "Logged in as " + connection.getUser());
-		} catch (XMPPException e) {
-			Log.e("GTalkHandler - Logging in", "Failed to log in as " + username + ".");
-			return false;
-		}
-	    
-	    return true;
+		
+		return true;
 	}
-
-	/**
-	 * Called by Settings dialog when a connection is establised with 
-	 * the XMPP server
-	 */
-	public static void setupConnection() {
-	    if (connection != null) {
-	      // Add a packet listener to get messages sent to us
-	      PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
-	      connection.addPacketListener(new PacketListener() {
-	        @Override
-	        public void processPacket(Packet packet) {
-	          Message message = (Message) packet;
-	          if (message.getBody() != null) {
-	            String fromName = StringUtils.parseBareAddress(message.getFrom());
-	            Log.i("GTalkHandler ", " Text Recieved " + message.getBody() + " from " +  fromName);
-	            
-	            
-	            // TODO: Process incoming message
-	            //messages.add(fromName + ":");
-	            //messages.add(message.getBody());
-	            
-	            // Add the incoming message to the list view
-	            //mHandler.post(new Runnable() {
-	            //  public void run() {
-	            //    setListAdapter();
-	            //  }
-	            //});
-	          }
-	        }
-	      }, filter);
-	    }
+	
+	public static ArrayList<String> getChatsList() {
+		return mService.getChatsList();
+	}
+	
+	public static ArrayList<String> getMessages(String contact) {
+		if ( isServiceStarted )
+			return mService.getMessages(contact);
+		
+		return new ArrayList<String>();
+	}
+	
+	// Return bool indicates if send is successful
+	public static boolean sendMessage(String contact, String message) {
+		if ( isServiceStarted && mService.isAuthenticated() ) {
+			Message msg = new Message(contact, Message.Type.chat);
+	        msg.setBody(message);
+			
+			mService.sendPacket(msg);
+			mService.addMessage(contact, getUserBareAddr() + ":");
+			mService.addMessage(contact, message);
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public static String getUserBareAddr() {
+		if ( isServiceStarted )
+			return StringUtils.parseBareAddress( mService.getConnection().getUser() );
+		return "";
 	}
 	
 	public static void updateRoaster() {
-		roster = connection.getRoster();
-		Collection<RosterEntry> entries = roster.getEntries();
-        for (RosterEntry entry : entries) {
-         // TODO:
-          Log.d("XMPPChatDemoActivity",  "--------------------------------------");
-          Log.d("XMPPChatDemoActivity", "RosterEntry " + entry);
-          Log.d("XMPPChatDemoActivity", "User: " + entry.getUser());
-          Log.d("XMPPChatDemoActivity", "Name: " + entry.getName());
-          Log.d("XMPPChatDemoActivity", "Status: " + entry.getStatus());
-          Log.d("XMPPChatDemoActivity", "Type: " + entry.getType());
-          Presence entryPresence = roster.getPresence(entry.getUser());
-
-          Log.d("XMPPChatDemoActivity", "Presence Status: "+ entryPresence.getStatus());
-          Log.d("XMPPChatDemoActivity", "Presence Type: " + entryPresence.getType());
-
-          Presence.Type type = entryPresence.getType();
-          if (type == Presence.Type.available)
-            Log.d("XMPPChatDemoActivity", "Presence AVIALABLE");
-          Log.d("XMPPChatDemoActivity", "Presence : " + entryPresence);
-       }
+		mService.updateRoaster();
 	}
 	
+	public static RosterEntry lookupUser(String bareAddr) {
+		Collection<RosterEntry> entries = mService.getRoster().getEntries();
+        for (RosterEntry entry : entries) {
+        	if ( StringUtils.parseBareAddress( entry.getUser() ).equals(bareAddr) )
+        		return entry;
+        }
+        return null;
+	}
+	
+	public static String getUserName(String bareAddr) {
+		RosterEntry res = lookupUser(bareAddr);
+		if ( res != null && res.getName() != null )
+			return res.getName();
+		
+		return bareAddr;
+	}
 }

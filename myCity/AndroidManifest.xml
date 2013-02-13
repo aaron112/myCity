@@ -35,7 +35,8 @@
 
         <activity
             android:name="edu.ucsd.mycity.ChatActivity"
-            android:label="@string/title_activity_chat" >
+            android:label="@string/title_activity_chat"
+            android:windowSoftInputMode="adjustResize" >
         </activity>
         <activity
             android:name="edu.ucsd.mycity.BuddyList"
@@ -45,6 +46,8 @@
             android:name="edu.ucsd.mycity.SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
+        
+        <service android:enabled="true" android:name="edu.ucsd.mycity.GTalkService" />
     </application>
 
 </manifest>

@@ -18,6 +18,12 @@
         android:singleLine="true"
         android:title="@string/pref_gtalk_password" />
     
+	<CheckBoxPreference
+        android:defaultValue="true"
+        android:key="gtalk_autologin"
+        android:summary="@string/pref_description_gtalk_autologin"
+        android:title="@string/pref_title_gtalk_autologin" />
+	
     <ListPreference
         android:defaultValue="@string/pref_default_update_interval"
         android:entries="@array/pref_update_interval_titles"
@@ -25,15 +31,10 @@
         android:key="update_interval"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:title="@string/pref_update_interval" />
+        android:title="@string/pref_title_update_interval"
+        android:summary="@string/pref_description_update_interval" />
     
-  
-<!--    <CheckBoxPreference
-        android:defaultValue="true"
-        android:key="example_checkbox"
-        android:summary="@string/pref_description_social_recommendations"
-        android:title="@string/pref_title_social_recommendations" />
--->
+
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
 <!--    <EditTextPreference
