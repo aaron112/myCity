@@ -3,8 +3,12 @@ package edu.ucsd.mycity;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
 import android.content.ComponentName;
@@ -26,6 +30,8 @@ import android.util.Log;
 public class GTalkHandler {
 	private static final String TAG = "GTalkHandler";
 	public static Context context;
+	
+	private static Roster roster;
 	
 	private static ArrayList<ChatClient> observers = new ArrayList<ChatClient>();
 	
@@ -115,19 +121,64 @@ public class GTalkHandler {
 		if ( !isServiceStarted )
 			startService();
 		
-		while ( mService == null ) {}
-		
-		Log.d(TAG, "DEBUG: mService: " + mService);
+		while ( mService == null ) {}	// Wait until Service is set up
 		
 		if ( mService.isAuthenticated() )
 			return true;
 		
 		if ( mService.connect() ) {
-			mService.setupConnection();
-			mService.updateRoaster();
+			mService.setConnection();
+			setRoaster();
 		}
 		
 		return true;
+	}
+	
+	public static void setRoaster() {
+		if ( isServiceStarted && mService.isAuthenticated() ) {
+			roster = mService.getRoster();
+			BuddyHandler.loadBuddiesFromRoster(roster);
+			
+			// Roster Update Listener
+			roster.addRosterListener(new RosterListener() {
+			    public void entriesDeleted(Collection<String> addresses) {
+			    	BuddyHandler.loadBuddiesFromRoster(roster);
+			    }
+			    public void entriesUpdated(Collection<String> addresses) {
+			    	BuddyHandler.loadBuddiesFromRoster(roster);
+			    }
+			    public void presenceChanged(Presence presence) {
+			    	Log.d(TAG, "Presence changed: " + presence.getFrom() + " " + presence);
+			    	BuddyHandler.updatePresense(StringUtils.parseBareAddress(presence.getFrom()), presence);
+			    }
+				@Override
+				public void entriesAdded(Collection<String> arg0) {
+					BuddyHandler.loadBuddiesFromRoster(roster);
+				}
+			});
+		}
+		
+		/***
+		Collection<RosterEntry> entries = roster.getEntries();
+        for (RosterEntry entry : entries) {
+         // TODO:
+          Log.d(TAG,  "--------------------------------------");
+          Log.d(TAG, "RosterEntry " + entry);
+          Log.d(TAG, "User: " + entry.getUser());
+          Log.d(TAG, "Name: " + entry.getName());
+          Log.d(TAG, "Status: " + entry.getStatus());
+          Log.d(TAG, "Type: " + entry.getType());
+          Presence entryPresence = roster.getPresence(entry.getUser());
+
+          Log.d(TAG, "Presence Status: "+ entryPresence.getStatus());
+          Log.d(TAG, "Presence Type: " + entryPresence.getType());
+
+          Presence.Type type = entryPresence.getType();
+          if (type == Presence.Type.available)
+            Log.d(TAG, "Presence AVIALABLE");
+          Log.d(TAG, "Presence : " + entryPresence);
+       }
+       */
 	}
 	
 	public static ArrayList<String> getChatsList() {
@@ -162,10 +213,6 @@ public class GTalkHandler {
 		return "";
 	}
 	
-	public static void updateRoaster() {
-		mService.updateRoaster();
-	}
-	
 	public static RosterEntry lookupUser(String bareAddr) {
 		Collection<RosterEntry> entries = mService.getRoster().getEntries();
         for (RosterEntry entry : entries) {
@@ -181,5 +228,40 @@ public class GTalkHandler {
 			return res.getName();
 		
 		return bareAddr;
+	}
+	
+	
+	// Returns true if matched.
+	public static boolean processProbe(Packet packet) {
+		Message message = (Message) packet;
+		String chatContent = message.getBody();
+		
+		if (chatContent.matches("myCityProbe")) {
+			Log.d(TAG, "myCityProbe received from " + StringUtils.parseBareAddress(message.getFrom()));
+			
+			BuddyHandler.setIsMyCityUser( StringUtils.parseBareAddress(message.getFrom()) );
+			return true;
+		}
+		
+		return false;
+	}
+
+	// Returns true if matched.
+	public static boolean processGPX(Packet packet) {
+		Message message = (Message) packet;
+		String chatContent = message.getBody();
+		ArrayList<String> matchRes = GPXParser.parseGPX(chatContent);
+		
+		if (matchRes != null) {
+			Log.d(TAG, "matched GPX received from " + StringUtils.parseBareAddress(message.getFrom()));
+			
+			BuddyHandler.updateLocation( StringUtils.parseBareAddress(message.getFrom()), 
+										 Double.parseDouble(matchRes.get(0)),
+										 Double.parseDouble(matchRes.get(1)),
+										 matchRes.get(2));
+			return true;
+		}
+		
+		return false;
 	}
 }

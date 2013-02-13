@@ -1,20 +1,17 @@
 package edu.ucsd.mycity;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
-import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
 import android.app.Service;
@@ -44,7 +41,6 @@ public class GTalkService extends Service {
 
 	private XMPPConnection connection = null;
 	private SharedPreferences prefs;
-	private Roster roster;
 	
 	private ArrayList<String> chatsList = new ArrayList<String>();	// List of open chats
 	private HashMap<String, ArrayList<String>> messagesList = new HashMap<String, ArrayList<String>>();
@@ -176,7 +172,7 @@ public class GTalkService extends Service {
 	 * Called by Settings dialog when a connection is established with 
 	 * the XMPP server
 	 */
-	public void setupConnection() {
+	public void setConnection() {
 	    if (connection != null) {
 	      // Add a packet listener to get messages sent to us
 	      PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
@@ -188,13 +184,14 @@ public class GTalkService extends Service {
 	          if (message.getBody() != null) {
 	            String fromName = StringUtils.parseBareAddress(message.getFrom());
 	            Log.i(TAG, "Text Recieved " + message.getBody() + " from " +  fromName);
+
+	            // Process incoming message for XML Location
+	            if ( GTalkHandler.processProbe(packet) || GTalkHandler.processGPX(packet) )
+	            	return;
 	            
 	            addMessage(fromName, GTalkHandler.getUserName(fromName) + ":");
 	            addMessage(fromName, message.getBody());
-	            
 	            newMessageReceived(fromName);
-	            
-	            // TODO: Process incoming message for XML Location
 	          }
 	        }
 	        
@@ -202,32 +199,8 @@ public class GTalkService extends Service {
 	    }
 	}
 	
-	public void updateRoaster() {
-		roster = connection.getRoster();
-
-		Collection<RosterEntry> entries = roster.getEntries();
-        for (RosterEntry entry : entries) {
-         // TODO:
-          Log.d(TAG,  "--------------------------------------");
-          Log.d(TAG, "RosterEntry " + entry);
-          Log.d(TAG, "User: " + entry.getUser());
-          Log.d(TAG, "Name: " + entry.getName());
-          Log.d(TAG, "Status: " + entry.getStatus());
-          Log.d(TAG, "Type: " + entry.getType());
-          Presence entryPresence = roster.getPresence(entry.getUser());
-
-          Log.d(TAG, "Presence Status: "+ entryPresence.getStatus());
-          Log.d(TAG, "Presence Type: " + entryPresence.getType());
-
-          Presence.Type type = entryPresence.getType();
-          if (type == Presence.Type.available)
-            Log.d(TAG, "Presence AVIALABLE");
-          Log.d(TAG, "Presence : " + entryPresence);
-       }
-	}
-	
 	public Roster getRoster() {
-		return roster;
+		return connection.getRoster();
 	}
 	
 	public ArrayList<String> getChatsList() {

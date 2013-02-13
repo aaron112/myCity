@@ -77,8 +77,6 @@ public class ChatActivity extends Activity implements ChatClient {
       }
 	});
 	
-	GTalkHandler.updateRoaster();
-	
 	updateMsgList();
     updateChatList();
     

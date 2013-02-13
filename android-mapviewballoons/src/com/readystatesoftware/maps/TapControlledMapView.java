@@ -29,7 +29,8 @@ public class TapControlledMapView extends MapView implements OnGestureListener {
         setupGestures();
     }
     
-    private void setupGestures() {
+    @SuppressWarnings("deprecation")
+	private void setupGestures() {
     	gd = new GestureDetector(this);  
         
         //set the on Double tap listener  
