@@ -1,6 +1,6 @@
 package edu.ucsd.mycity;
 
-//Subject-Observer Pattern
+// Observer Pattern
 
 public interface ChatClient {
 	public void onUpdate(String contact);

@@ -26,7 +26,7 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
-public class Map extends MapActivity implements LocationListener{
+public class Map extends MapActivity implements LocationListener {
 	// This is MainActivity
 	final String TAG = "MainActivity";
 	
@@ -101,11 +101,13 @@ public class Map extends MapActivity implements LocationListener{
 	        Toast.makeText(this, "Location not yet acquired", Toast.LENGTH_LONG).show();
 	    }
 	}
+	
 	public void animateToCurrentLocation(){
 	    if(currentPoint!=null){
 	        mapController.animateTo(currentPoint);
 	    }
 	}
+	
 	public String getBestProvider(){
 	    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 	    Criteria criteria = new Criteria();
@@ -114,6 +116,7 @@ public class Map extends MapActivity implements LocationListener{
 	    String bestProvider = locationManager.getBestProvider(criteria, true);
 	    return bestProvider;
 	}
+	
 	public void setCurrentLocation(Location location){
 	    int currLatitude = (int) (location.getLatitude()*1E6);
 	    int currLongitude = (int) (location.getLongitude()*1E6);
@@ -127,6 +130,7 @@ public class Map extends MapActivity implements LocationListener{
 	public void onLocationChanged(Location location) {
 		setCurrentLocation(location);
 		drawCurrPositionOverlay();
+		
 		//animateToCurrentLocation();
 		
 	}
@@ -153,10 +157,6 @@ public class Map extends MapActivity implements LocationListener{
 	protected void onResume() {
 	    super.onResume();
 	    locationManager.requestLocationUpdates(getBestProvider(), 1000, 1, this);
-	    
-	    //if ( checkConfig() && !GTalkHandler.connection.isConnected() ) {
-	    //	GTalkConnect();
-	    //}
 	}
 	
 	@Override
@@ -192,7 +192,8 @@ public class Map extends MapActivity implements LocationListener{
 	    
 	    case R.id.menu_forceupdate:
 	    	// TODO: Force update
-    		Toast.makeText(this, "Force Update Invoked. (TODO)", Toast.LENGTH_LONG).show();
+	    	GTalkHandler.probeUser(null);
+    		Toast.makeText(this, "Force Update Invoked.", Toast.LENGTH_LONG).show();
 	    	return true;
 	    	
 	    case R.id.menu_settings:
@@ -242,7 +243,6 @@ public class Map extends MapActivity implements LocationListener{
 	    Thread t = new Thread(new Runnable() {
 	      	public void run() {
 	      		GTalkHandler.connect();
-	    		//GTalkHandler.updateRoaster();
 	    		dialog.dismiss();
 	    	}
 	    });

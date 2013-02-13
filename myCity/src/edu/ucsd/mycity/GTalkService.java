@@ -1,6 +1,9 @@
 package edu.ucsd.mycity;
 
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -14,9 +17,15 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.util.StringUtils;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,11 +42,17 @@ import android.widget.Toast;
  */
 
 
-public class GTalkService extends Service {
+public class GTalkService extends Service implements LocationListener {
 	private static final String TAG = "GTalkService";
 	private static final String HOST = "talk.google.com";
 	private static final int PORT = 5222;
 	private static final String SERVICE = "gmail.com";
+	
+	private static final int minUpdateInterval = 10; // minimum location update interval (In seconds)
+	
+	private LocationManager locationManager;
+	private Location lastKnownLocation = null;
+	//private long lastLocationUpdate = 0;
 
 	private XMPPConnection connection = null;
 	private SharedPreferences prefs;
@@ -97,6 +112,9 @@ public class GTalkService extends Service {
 		
 		// Set up callbackMessenger
 		callbackMessenger = (Messenger) intent.getExtras().get("callbackMessenger");
+		
+		// Set up Location Manager
+		setLocationManager();
 		
 		return f;
 	}
@@ -186,7 +204,12 @@ public class GTalkService extends Service {
 	            Log.i(TAG, "Text Recieved " + message.getBody() + " from " +  fromName);
 
 	            // Process incoming message for XML Location
-	            if ( GTalkHandler.processProbe(packet) || GTalkHandler.processGPX(packet) )
+	            if ( GTalkHandler.processProbe(packet) ) {
+	            	// Send new location to our newly added buddy
+	            	sendNewLocation(lastKnownLocation, fromName);
+	            	return;
+	            }
+	            if ( GTalkHandler.processGPX(packet) )
 	            	return;
 	            
 	            addMessage(fromName, GTalkHandler.getUserName(fromName) + ":");
@@ -246,5 +269,76 @@ public class GTalkService extends Service {
 				Toast.makeText(getApplicationContext(), toastCache, Toast.LENGTH_LONG).show();
 			}
 		});
+	}
+
+	// LocationListener ------------
+	private void setLocationManager() {
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		Criteria criteria = new Criteria();
+	    criteria.setPowerRequirement(Criteria.NO_REQUIREMENT);
+	    criteria.setAccuracy(Criteria.ACCURACY_FINE);
+	    String bestProvider = locationManager.getBestProvider(criteria, true);
+	    this.lastKnownLocation = locationManager.getLastKnownLocation(bestProvider);
+	    
+	    locationManager.requestLocationUpdates(bestProvider, minUpdateInterval*1000, 1, this);
+	}
+	@Override
+	public void onLocationChanged(Location location) {
+		// TODO Auto-generated method stub
+		Log.d(TAG, "onLocationChanged");
+		this.lastKnownLocation = location;
+		sendNewLocation(location, null); // Broadcast
+	}
+
+	@Override
+	public void onProviderDisabled(String arg0) {
+		// No nothing
+	}
+
+	@Override
+	public void onProviderEnabled(String arg0) {
+		// No nothing
+	}
+
+	@Override
+	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
+		// No nothing
+	}
+	
+	// sendNewLocation: 
+	// loc: new location
+	// to: bare address or null for broadcasting
+	@SuppressLint("SimpleDateFormat")
+	public void sendNewLocation(Location loc, String to) {
+		if ( loc == null )
+			return;
+		
+		if ( connection.isAuthenticated() ) {
+			Log.d(TAG, "Broadcasting new location");
+			
+			// Build GPX Message:
+			DecimalFormat dForm = new DecimalFormat("###.######");
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+			String message = "<trkpt lat=\""+dForm.format(loc.getLatitude())+"\" lon=\""+dForm.format(loc.getLongitude())+"\">";
+			message += "<ele>"+loc.getAltitude()+"</ele>";
+			message += "<time>"+sdf.format(new Date(loc.getTime()))+"</time></trkpt>";
+			
+			Message msg = new Message("", Message.Type.chat);
+			msg.setBody(message);
+			
+			ArrayList<BuddyEntry> buddies = new ArrayList<BuddyEntry>();
+			
+			if ( to == null ) {
+				// Broadcast
+				buddies = BuddyHandler.getMyCityBuddies();
+			} else {
+				buddies.add( new BuddyEntry("", to, null) );
+			}
+			
+			for (BuddyEntry buddy : buddies) {
+				msg.setTo( buddy.getUser() );
+				sendPacket(msg);
+			}
+		}
 	}
 }

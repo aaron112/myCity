@@ -65,7 +65,7 @@ public class ChatActivity extends Activity implements ChatClient {
         
         Log.i(TAG, "Sending text " + text + " to " + contact);
         
-        if ( GTalkHandler.sendMessage(contact, text) ) {
+        if ( GTalkHandler.sendMessage(contact, text, GTalkHandler.SENDMSG_NORMAL) ) {
         	updateMsgList();
         } else {
         	runOnUiThread(new Runnable() {

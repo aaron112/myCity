@@ -28,7 +28,11 @@ import android.util.Log;
  */
 
 public class GTalkHandler {
+	public static final int SENDMSG_HIDDEN = 0;
+	public static final int SENDMSG_NORMAL = 1;
+	
 	private static final String TAG = "GTalkHandler";
+	private static final String PROBEMSG = "myCityProbe";
 	public static Context context;
 	
 	private static Roster roster;
@@ -99,6 +103,7 @@ public class GTalkHandler {
 	
 	public static void stopService() {
 		isServiceStarted = false;
+		BuddyHandler.clear();
 		context.unbindService(mConn);
 		context.stopService(new Intent(context, GTalkService.class));
 	}
@@ -193,14 +198,17 @@ public class GTalkHandler {
 	}
 	
 	// Return bool indicates if send is successful
-	public static boolean sendMessage(String contact, String message) {
+	public static boolean sendMessage(String contact, String message, int mode) {
 		if ( isServiceStarted && mService.isAuthenticated() ) {
 			Message msg = new Message(contact, Message.Type.chat);
 	        msg.setBody(message);
-			
-			mService.sendPacket(msg);
-			mService.addMessage(contact, getUserBareAddr() + ":");
-			mService.addMessage(contact, message);
+	        
+	        mService.sendPacket(msg);
+	        
+	        if ( mode != GTalkHandler.SENDMSG_HIDDEN ) {
+	        	mService.addMessage(contact, getUserBareAddr() + ":");
+				mService.addMessage(contact, message);
+	        }
 			return true;
 		}
 		
@@ -236,7 +244,7 @@ public class GTalkHandler {
 		Message message = (Message) packet;
 		String chatContent = message.getBody();
 		
-		if (chatContent.matches("myCityProbe")) {
+		if (chatContent.matches(PROBEMSG)) {
 			Log.d(TAG, "myCityProbe received from " + StringUtils.parseBareAddress(message.getFrom()));
 			
 			BuddyHandler.setIsMyCityUser( StringUtils.parseBareAddress(message.getFrom()) );
@@ -263,5 +271,27 @@ public class GTalkHandler {
 		}
 		
 		return false;
+	}
+	
+	// to: null to probe all flagged users (Force Update)
+	public static void probeUser(String to) {
+		if ( isServiceStarted && mService.isAuthenticated() ) {
+			ArrayList<BuddyEntry> buddies = new ArrayList<BuddyEntry>();
+			
+			Message msg = new Message("", Message.Type.chat);
+			msg.setBody(PROBEMSG);
+			
+			if ( to == null ) {
+				// Broadcast
+				buddies = BuddyHandler.getMyCityBuddies();
+			} else {
+				buddies.add( new BuddyEntry("", to, null) );
+			}
+			
+			for (BuddyEntry buddy : buddies) {
+				msg.setTo( buddy.getUser() );
+				mService.sendPacket(msg);
+			}
+		}
 	}
 }

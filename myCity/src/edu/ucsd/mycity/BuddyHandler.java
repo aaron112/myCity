@@ -14,7 +14,11 @@ import android.util.Log;
 
 public class BuddyHandler {
 	private static final String TAG = "BuddyHandler";
-	static HashMap<String, BuddyEntry> buddies = new HashMap<String, BuddyEntry>();
+	private static HashMap<String, BuddyEntry> buddies = new HashMap<String, BuddyEntry>();
+	
+	public static void clear() {
+		buddies = new HashMap<String, BuddyEntry>();
+	}
 	
 	public static void loadBuddiesFromRoster(Roster roster) {
 		Log.d(TAG, "loadBuddiesFromRoster");
@@ -34,6 +38,8 @@ public class BuddyHandler {
         	} else {
         		// New entry
         		buddies.put(bareAddr, new BuddyEntry( userName, bareAddr, roster.getPresence(entry.getUser()) ));
+        		// Try to probe user
+        		GTalkHandler.probeUser(bareAddr);
         	}
         }
 	}
@@ -48,6 +54,8 @@ public class BuddyHandler {
 	
 	public static void setIsMyCityUser(String bareAddr) {
 		if ( buddies.containsKey(bareAddr) ) {
+			Log.d(TAG, "Added myCity buddy: "+bareAddr);
+			
 			buddies.get(bareAddr).setMyCityUser(true);
 		}
 	}
@@ -68,7 +76,18 @@ public class BuddyHandler {
 	public static ArrayList<BuddyEntry> getNearbyBuddies(Location loc, float maxDistance) {
 		ArrayList<BuddyEntry> res = new ArrayList<BuddyEntry>();
 		for (BuddyEntry buddy : buddies.values()) {
-			if ( loc.distanceTo(buddy.getLocation()) <= maxDistance ) {
+			if ( buddy.isMyCityUser() && loc.distanceTo(buddy.getLocation()) <= maxDistance ) {
+				res.add(buddy);
+			}
+		}
+		
+		return res;
+	}
+	
+	public static ArrayList<BuddyEntry> getMyCityBuddies() {
+		ArrayList<BuddyEntry> res = new ArrayList<BuddyEntry>();
+		for (BuddyEntry buddy : buddies.values()) {
+			if ( buddy.isMyCityUser() ) {
 				res.add(buddy);
 			}
 		}
