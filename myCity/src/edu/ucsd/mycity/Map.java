@@ -3,16 +3,13 @@ package edu.ucsd.mycity;
 import java.util.List;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,16 +23,18 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
-public class Map extends MapActivity implements LocationListener {
+import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
+import edu.ucsd.mycity.maptrack.TrackedMapView;
+
+public class Map extends MapActivity implements LocationClient, OnMapViewChangeListener {
 	// This is MainActivity
 	final String TAG = "MainActivity";
 	
 	private SharedPreferences prefs;
 	
 	private MapController mapController;
-	private MapView mapView;
+	private TrackedMapView mapView;
 	
-	private LocationManager locationManager;
 	private GeoPoint currentPoint;
 	private Location currentLocation = null;
 	
@@ -45,155 +44,92 @@ public class Map extends MapActivity implements LocationListener {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+	    Log.i(TAG, "onCreate");
+		super.onCreate(savedInstanceState);
+	    
 		prefs = PreferenceManager.getDefaultSharedPreferences( getApplicationContext() );
 		GTalkHandler.context = getApplicationContext();
+		GTalkHandler.startService();
 		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_map);
 		
-		mapView = (MapView)findViewById(R.id.mapView);
+		mapView = (TrackedMapView)findViewById(R.id.mapView);
 		mapView.setBuiltInZoomControls(true);
+		mapView.setOnChangeListener(this);
+		
 		mapController = mapView.getController();
 		mapController.setZoom(18);
 		
-		getLastLocation();
+		updateLocation();
 		animateToCurrentLocation();
-
-		drawCurrPositionOverlay();
 		
         refreshBtn = (Button) findViewById(R.id.updateLocation);
         refreshBtn.setOnClickListener(new View.OnClickListener() {   
             @Override
             public void onClick(View v) {
+            	updateLocation();
             	animateToCurrentLocation();
             }
         });
         
         if ( prefs.getBoolean("gtalk_autologin", true) && checkConfig() ) {
 		    GTalkConnect();
+        } else {
+        	Toast.makeText(this, "Currently in Offline Mode (Auto login disabled)", Toast.LENGTH_LONG).show();
         }
 	}
 
+	@Override
+	protected void onResume() {
+	    Log.i(TAG, "onResume");
+	    super.onResume();
+	    GTalkHandler.registerLocationClient(this);
+	}
+	
+	@Override
+	protected void onPause() {
+	    Log.i(TAG, "onResume");
+	    GTalkHandler.removeLocationClient(this);
+	    super.onPause();
+	}
+	
+	@Override
+	protected void onDestroy() {
+	    Log.i(TAG, "onDestroy");
+	    GTalkHandler.removeLocationClient(this);
+		super.onDestroy();
+		//
+	}
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_map, menu);
 		return true;
 	}
-
-	@Override
-	/**
-	 * 
-	 */
-	protected boolean isRouteDisplayed() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 	
-	public void getLastLocation(){
-	    String provider = getBestProvider();
-	    currentLocation = locationManager.getLastKnownLocation(provider);
-	    if(currentLocation != null){
-	        setCurrentLocation(currentLocation);
-	    }
-	    else
-	    {
-	        Toast.makeText(this, "Location not yet acquired", Toast.LENGTH_LONG).show();
-	    }
-	}
-	
-	public void animateToCurrentLocation(){
-	    if(currentPoint!=null){
-	        mapController.animateTo(currentPoint);
-	    }
-	}
-	
-	public String getBestProvider(){
-	    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-	    Criteria criteria = new Criteria();
-	    criteria.setPowerRequirement(Criteria.NO_REQUIREMENT);
-	    criteria.setAccuracy(Criteria.ACCURACY_FINE);
-	    String bestProvider = locationManager.getBestProvider(criteria, true);
-	    return bestProvider;
-	}
-	
-	public void setCurrentLocation(Location location){
-	    int currLatitude = (int) (location.getLatitude()*1E6);
-	    int currLongitude = (int) (location.getLongitude()*1E6);
-	    currentPoint = new GeoPoint(currLatitude,currLongitude);
-	    currentLocation = new Location("");
-	    currentLocation.setLatitude(currentPoint.getLatitudeE6() / 1e6);
-	    currentLocation.setLongitude(currentPoint.getLongitudeE6() / 1e6);
-	}
-
-	@Override
-	public void onLocationChanged(Location location) {
-		setCurrentLocation(location);
-		drawCurrPositionOverlay();
-		
-		//animateToCurrentLocation();
-		
-	}
-
-	@Override
-	public void onProviderDisabled(String provider) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onProviderEnabled(String provider) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	protected void onResume() {
-	    super.onResume();
-	    locationManager.requestLocationUpdates(getBestProvider(), 1000, 1, this);
-	}
-	
-	@Override
-	protected void onPause() {
-	    super.onPause();
-	    locationManager.removeUpdates(this);
-	}
-	
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		//
-	}
-	
-	public void drawCurrPositionOverlay(){
-	    List<Overlay> overlays = mapView.getOverlays();
-	    overlays.remove(currPos);
-	    Drawable marker = getResources().getDrawable(R.drawable.mylocation);
-	    currPos = new MyOverlay(marker,mapView);
-	    if(currentPoint!=null){
-	        OverlayItem overlayitem = new OverlayItem(currentPoint, "Me", "Here I am!");
-	        currPos.addOverlay(overlayitem);
-	        overlays.add(currPos);
-	        currPos.setCurrentLocation(currentLocation);
-	    }
-	}
-
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+	    case R.id.menu_chat:
+	    	if ( !GTalkHandler.getChatsList().isEmpty() ) {
+		    	Intent intent = new Intent(this, ChatActivity.class);
+		    	Bundle b = new Bundle();
+		    	b.putString("contact", "");
+		    	intent.putExtras(b);
+		    	startActivity(intent);
+	    	} else {
+	    		Toast.makeText(this, "Start a new conversation from Map or Contact List", Toast.LENGTH_SHORT).show();
+	    	}
+	    	return true;
+	    	
 	    case R.id.menu_buddyList:
 	    	startActivity(new Intent(this, BuddyList.class));
 	    	return true;
 	    
 	    case R.id.menu_forceupdate:
-	    	// TODO: Force update
 	    	GTalkHandler.probeUser(null);
-    		Toast.makeText(this, "Force Update Invoked.", Toast.LENGTH_LONG).show();
+    		Toast.makeText(this, "Force Update Invoked", Toast.LENGTH_LONG).show();
 	    	return true;
 	    	
 	    case R.id.menu_settings:
@@ -211,22 +147,8 @@ public class Map extends MapActivity implements LocationListener {
 	    	return true;
 	    
 	    case R.id.menu_logout:
-	    	try {
-				GTalkHandler.stopService();
-		    } catch (Exception e) {
-
-		    }
-	    	Toast.makeText(this, "Logged out of Google Talk.", Toast.LENGTH_LONG).show();
-	    	return true;
-	    
-	    case R.id.menu_chat:
-	    	// TODO: DEBUG ONLY
-	    	Intent intent = new Intent(this, ChatActivity.class);
-	    	Bundle b = new Bundle();
-	    	b.putString("contact", "kicked1102@gmail.com");
-	    	intent.putExtras(b);
-	    	startActivity(intent);
-	    	
+	    	GTalkHandler.disconnect();
+	    	Toast.makeText(this, "Logged out of Google Talk", Toast.LENGTH_LONG).show();
 	    	return true;
 	    	
 	    default:
@@ -234,6 +156,52 @@ public class Map extends MapActivity implements LocationListener {
 	    }
 	}
 	
+	
+	@Override
+	public void onMapViewChange(MapView mapView, GeoPoint newCenter,
+			GeoPoint oldCenter, int newZoom, int oldZoom) {
+		Log.d(TAG, "onMapViewChange!");
+		// TODO Redraw pins
+	}
+	
+	public void updateLocation(){
+		currentLocation = GTalkHandler.getLastKnownLocation();
+	    if(currentLocation != null) {
+	        setCurrentLocation(currentLocation);
+			drawCurrPositionOverlay();
+	    } else {
+	        Toast.makeText(this, "Location not yet acquired", Toast.LENGTH_SHORT).show();
+	    }
+	}
+	
+	public void animateToCurrentLocation() {
+	    if(currentPoint!=null){
+	        mapController.animateTo(currentPoint);
+	    }
+	}
+	
+	
+	public void setCurrentLocation(Location location){
+	    int currLatitude = (int) (location.getLatitude()*1E6);
+	    int currLongitude = (int) (location.getLongitude()*1E6);
+	    currentPoint = new GeoPoint(currLatitude,currLongitude);
+	    currentLocation = new Location("");
+	    currentLocation.setLatitude(currentPoint.getLatitudeE6() / 1e6);
+	    currentLocation.setLongitude(currentPoint.getLongitudeE6() / 1e6);
+	}
+	
+	public void drawCurrPositionOverlay(){
+	    List<Overlay> overlays = mapView.getOverlays();
+	    overlays.remove(currPos);
+	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
+	    currPos = new MyOverlay(marker,mapView);
+	    if(currentPoint!=null){
+	        OverlayItem overlayitem = new OverlayItem(currentPoint, "Me", GTalkHandler.getUserBareAddr());
+	        currPos.addOverlay(overlayitem);
+	        overlays.add(currPos);
+	        currPos.setCurrentLocation(currentLocation);
+	    }
+	}
 	
 	
 	// Helpers -------------------------------------------------------------
@@ -264,5 +232,15 @@ public class Map extends MapActivity implements LocationListener {
         
         return true;
 	}
-	
+
+	@Override
+	public void onLocationUpdate(Location location) {
+		setCurrentLocation(location);
+		animateToCurrentLocation();
+	}
+
+	@Override
+	protected boolean isRouteDisplayed() {
+		return false;
+	}
 }

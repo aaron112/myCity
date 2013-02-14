@@ -9,8 +9,8 @@ package edu.ucsd.mycity;
 
 public final class R {
     public static final class array {
-        public static final int pref_update_interval_titles=0x7f070000;
-        public static final int pref_update_interval_values=0x7f070001;
+        public static final int pref_min_update_interval_titles=0x7f070000;
+        public static final int pref_min_update_interval_values=0x7f070001;
     }
     public static final class attr {
     }
@@ -21,8 +21,12 @@ public final class R {
         public static final int balloon_overlay_focused=0x7f020003;
         public static final int balloon_overlay_unfocused=0x7f020004;
         public static final int ic_launcher=0x7f020005;
-        public static final int mylocation=0x7f020006;
-        public static final int restaurant=0x7f020007;
+        public static final int map_icon=0x7f020006;
+        public static final int map_pointer=0x7f020007;
+        public static final int mylocation=0x7f020008;
+        public static final int new_message=0x7f020009;
+        public static final int new_message_2=0x7f02000a;
+        public static final int restaurant=0x7f02000b;
     }
     public static final class id {
         public static final int balloon_close=0x7f050001;
@@ -38,10 +42,11 @@ public final class R {
         public static final int listMessages=0x7f050004;
         public static final int mapView=0x7f050008;
         public static final int menu_buddyList=0x7f050010;
-        public static final int menu_chat=0x7f050014;
-        public static final int menu_forceupdate=0x7f050011;
-        public static final int menu_login=0x7f050012;
-        public static final int menu_logout=0x7f050013;
+        public static final int menu_chat=0x7f050012;
+        public static final int menu_closechat=0x7f050011;
+        public static final int menu_forceupdate=0x7f050013;
+        public static final int menu_login=0x7f050014;
+        public static final int menu_logout=0x7f050015;
         public static final int menu_settings=0x7f05000f;
         public static final int sendBtn=0x7f050007;
         public static final int text1=0x7f05000e;
@@ -61,26 +66,31 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f060000;
-        public static final int button_mylocation=0x7f060006;
+        public static final int button_mylocation=0x7f060008;
+        public static final int button_send=0x7f06000d;
+        public static final int hint_type_to_compose=0x7f06000c;
         public static final int menu_buddyList=0x7f060001;
-        public static final int menu_forceupdate=0x7f060002;
-        public static final int menu_login=0x7f060004;
-        public static final int menu_logout=0x7f060005;
-        public static final int menu_settings=0x7f060003;
-        public static final int pref_default_update_interval=0x7f060011;
-        public static final int pref_description_gtalk_autologin=0x7f06000e;
-        public static final int pref_description_update_interval=0x7f060010;
-        public static final int pref_gtalk_password=0x7f06000c;
-        public static final int pref_gtalk_username=0x7f06000b;
+        public static final int menu_chat=0x7f060002;
+        public static final int menu_closechat=0x7f060003;
+        public static final int menu_forceupdate=0x7f060004;
+        public static final int menu_login=0x7f060006;
+        public static final int menu_logout=0x7f060007;
+        public static final int menu_settings=0x7f060005;
+        public static final int pref_default_min_update_interval=0x7f060016;
+        public static final int pref_description_gtalk_autologin=0x7f060013;
+        public static final int pref_description_min_update_interval=0x7f060015;
+        public static final int pref_gtalk_password=0x7f060011;
+        public static final int pref_gtalk_username=0x7f060010;
         /**  Strings related to Settings 
  Example General settings 
          */
-        public static final int pref_header_general=0x7f06000a;
-        public static final int pref_title_gtalk_autologin=0x7f06000d;
-        public static final int pref_title_update_interval=0x7f06000f;
-        public static final int title_activity_buddy_list=0x7f060008;
-        public static final int title_activity_chat=0x7f060007;
-        public static final int title_activity_settings=0x7f060009;
+        public static final int pref_header_general=0x7f06000f;
+        public static final int pref_title_gtalk_autologin=0x7f060012;
+        public static final int pref_title_min_update_interval=0x7f060014;
+        public static final int text_chating_with=0x7f06000b;
+        public static final int title_activity_buddy_list=0x7f06000a;
+        public static final int title_activity_chat=0x7f060009;
+        public static final int title_activity_settings=0x7f06000e;
     }
     public static final class style {
         /** 

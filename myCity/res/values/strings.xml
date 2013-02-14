@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">myCity</string>
+    <string name="app_name">My City</string>
     
     <string name="menu_buddyList">Contacts</string>
+    <string name="menu_chat">Conversations</string>
+    <string name="menu_closechat">Close Conversation</string>
     <string name="menu_forceupdate">Force Update</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_login">Login</string>
@@ -13,5 +15,10 @@
     
     <string name="title_activity_chat">Chat</string>
     <string name="title_activity_buddy_list">Contacts</string>
+    
+    
+    <string name="text_chating_with">Chating With: </string>
+    <string name="hint_type_to_compose">Type to compose</string>
+    <string name="button_send">Send</string>
 
 </resources>

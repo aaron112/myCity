@@ -14,19 +14,23 @@
     <string name="pref_title_gtalk_autologin">Google Talk Autologin</string>
     <string name="pref_description_gtalk_autologin">Automatically login to Google Talk on app launch</string>
         
-    <string name="pref_title_update_interval">Map Update Interval</string>
-    <string name="pref_description_update_interval">Time between updates of buddy locations</string>
-    <string name="pref_default_update_interval">60</string>
+    <string name="pref_title_min_update_interval">GPS Update Interval</string>
+    <string name="pref_description_min_update_interval">Set lower (longer time) to preserve battery life and bandwidth</string>
+    <string name="pref_default_min_update_interval">300</string>
     
-    <string-array name="pref_update_interval_titles">
+    <string-array name="pref_min_update_interval_titles">
+        <item>5 seconds</item>
+        <item>10 seconds</item>
         <item>30 seconds</item>
         <item>1 minute</item>
         <item>5 minutes</item>
         <item>15 minutes</item>
         <item>30 minutes</item>
-        <item>Never</item>
+        <item>GPS Disabled</item>
     </string-array>
-    <string-array name="pref_update_interval_values">
+    <string-array name="pref_min_update_interval_values">
+        <item>5</item>
+        <item>10</item>
         <item>30</item>
         <item>60</item>
         <item>300</item>
@@ -77,5 +81,4 @@
     <string name="pref_ringtone_silent">Silent</string>
     <string name="pref_title_vibrate">Vibrate</string>
      -->
-
 </resources>

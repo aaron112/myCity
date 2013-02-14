@@ -1,11 +1,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-
     <item
         android:id="@+id/menu_buddyList"
         android:orderInCategory="10"
         android:showAsAction="never"
         android:title="@string/menu_buddyList"/>
+    
+    <item
+        android:id="@+id/menu_chat"
+        android:orderInCategory="15"
+        android:showAsAction="never"
+        android:title="@string/menu_chat"/>
     
     <item
         android:id="@+id/menu_forceupdate"
@@ -31,9 +36,4 @@
         android:showAsAction="never"
         android:title="@string/menu_settings"/>
     
-    <item
-        android:id="@+id/menu_chat"
-        android:orderInCategory="60"
-        android:showAsAction="never"
-        android:title="Chat (DEBUG ONLY)"/>
 </menu>

@@ -13,28 +13,15 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:minWidth="70dp"
-      android:text="Chating With: "
+      android:text="@string/text_chating_with"
       android:textStyle="bold" />
-    
     
     <Spinner
         android:id="@+id/chating_with"
 		android:layout_toRightOf="@+id/chating_with_text"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" />
-     
-      
-    <!-- 
-    <TextView
-      android:id="@+id/recipient"
-      android:layout_toRightOf="@+id/chating_with"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:minWidth="70dp"
-      android:text=""
-      android:textStyle="bold" />
- -->
- 
+    
 	<ListView
       android:id="@+id/listMessages"
       android:layout_width="wrap_content"
@@ -43,7 +30,6 @@
       android:scrollbars="horizontal"
       android:layout_above="@+id/bottomLayout" />
 	
-
     <LinearLayout
     android:id="@+id/bottomLayout"
     android:layout_alignParentBottom="true"
@@ -57,7 +43,7 @@
 	      android:layout_height="wrap_content"
 	      android:layout_weight="1"
 	      android:gravity="top"
-	      android:hint="Type to compose"
+	      android:hint="@string/hint_type_to_compose"
 	      android:scrollHorizontally="true" >
 	    </EditText>
 	
@@ -68,7 +54,7 @@
 	      android:layout_marginLeft="5dp"
 	      android:layout_marginRight="5dp"
 	      android:layout_marginTop="5dp"
-	      android:text="Send"
+	      android:text="@string/button_send"
 	      android:textStyle="bold" />
   </LinearLayout>
     

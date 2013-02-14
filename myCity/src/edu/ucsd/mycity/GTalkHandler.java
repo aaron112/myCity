@@ -15,6 +15,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -37,14 +38,27 @@ public class GTalkHandler {
 	
 	private static Roster roster;
 	
-	private static ArrayList<ChatClient> observers = new ArrayList<ChatClient>();
+	private static ArrayList<ChatClient> chatClients = new ArrayList<ChatClient>();
+	private static ArrayList<LocationClient> locationClients = new ArrayList<LocationClient>();
 	
 	// Handler for GTalkService
 	private static Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(android.os.Message msg) {
 			Bundle b = msg.getData();
-			notifyObservers( b.getString("contact") );
+			int msgtype = b.getInt("type");
+			
+			switch (msgtype) {
+			case GTalkService.HANDLER_MSG_CHAT_UPD:
+				notifyChatClients( b.getString("contact") );
+				break;
+				
+			case GTalkService.HANDLER_MSG_LOCATION_UPD:
+				Location location = (Location)b.getParcelable("location");
+				notifyLocationClients( location );
+				break;
+			}
+			
 		}
 	};
 	  
@@ -56,6 +70,7 @@ public class GTalkHandler {
 		public void onServiceConnected(ComponentName className, IBinder binder) {
 			Log.d(TAG, "Connected to service.");
 			mService = ((GTalkService.LocalBinder) binder).getService();
+			isServiceStarted = true;
 		}
 
 		@Override
@@ -67,41 +82,57 @@ public class GTalkHandler {
 	};
 	
 	// Subject in Observer Pattern
-	public static void registerObserver(ChatClient o) {
-		observers.add(o);
+	public static void registerLocationClient(LocationClient o) {
+		if ( !locationClients.contains(o) )
+			locationClients.add(o);
 	}
-
-	public static void removeObserver(ChatClient o) {
-		int i = observers.indexOf(o);
+	public static void removeLocationClient(LocationClient o) {
+		int i = locationClients.indexOf(o);
 		if (i >= 0) {
-			observers.remove(i);
+			locationClients.remove(i);
 		}
 	}
-
-	public static void notifyObservers(String from) {
-		for (int i = 0; i < observers.size(); ++i) {
-			ChatClient observer = (ChatClient)observers.get(i);
-			observer.onUpdate(from);
+	public static void notifyLocationClients(Location location) {
+		for (int i = 0; i < locationClients.size(); ++i) {
+			LocationClient locationClient = (LocationClient)locationClients.get(i);
+			locationClient.onLocationUpdate(location);
 		}
 	}
 	
-	public static void newMessageReceived(String from) {
-		notifyObservers(from);
+	public static void registerChatClient(ChatClient o) {
+		if ( !chatClients.contains(o) )
+			chatClients.add(o);
 	}
-	
+	public static void removeChatClient(ChatClient o) {
+		int i = chatClients.indexOf(o);
+		if (i >= 0) {
+			chatClients.remove(i);
+		}
+	}
+	public static void notifyChatClients(String from) {
+		for (int i = 0; i < chatClients.size(); ++i) {
+			ChatClient chatClient = (ChatClient)chatClients.get(i);
+			chatClient.onChatUpdate(from);
+		}
+	}
 	
 	public static void startService() {
-		Log.d(TAG, "Attempting to start service.");
+		if ( isServiceStarted )
+			return;
 		
+		Log.d(TAG, "Attempting to start service.");
+			
 		Intent intent = new Intent(context, GTalkService.class);
 		intent.putExtra("callbackMessenger", new Messenger(mHandler));
-		
+			
 		context.startService(intent);
-		context.bindService(intent, mConn, Context.BIND_AUTO_CREATE);
-		isServiceStarted = true;
+		context.bindService(intent, mConn, 0);
 	}
 	
 	public static void stopService() {
+		if ( !isServiceStarted )
+			return;
+		
 		isServiceStarted = false;
 		BuddyHandler.clear();
 		context.unbindService(mConn);
@@ -123,8 +154,7 @@ public class GTalkHandler {
 	// Connect to GTalk XMPP Server, returns true if successful
 	public static boolean connect() {
 		// Start Service if not started, then call to connect method
-		if ( !isServiceStarted )
-			startService();
+		startService();
 		
 		while ( mService == null ) {}	// Wait until Service is set up
 		
@@ -137,6 +167,13 @@ public class GTalkHandler {
 		}
 		
 		return true;
+	}
+	
+	public static void disconnect() {
+		if ( !isServiceStarted )
+			return;
+		
+		mService.disconnect();
 	}
 	
 	public static void setRoaster() {
@@ -186,8 +223,23 @@ public class GTalkHandler {
        */
 	}
 	
+	public static String getLastMsgFrom() {
+		if ( isServiceStarted )
+			return mService.getLastMsgFrom();
+
+		return null;
+	}
+	
+	public static void removeFromChatsList(String contact) {
+		if ( isServiceStarted )
+			mService.removeFromChatsList(contact);
+	}
+	
 	public static ArrayList<String> getChatsList() {
-		return mService.getChatsList();
+		if ( isServiceStarted )
+			return mService.getChatsList();
+
+		return new ArrayList<String>();
 	}
 	
 	public static ArrayList<String> getMessages(String contact) {
@@ -262,8 +314,9 @@ public class GTalkHandler {
 		
 		if (matchRes != null) {
 			Log.d(TAG, "matched GPX received from " + StringUtils.parseBareAddress(message.getFrom()));
-			
-			BuddyHandler.updateLocation( StringUtils.parseBareAddress(message.getFrom()), 
+			String bareAddr =  StringUtils.parseBareAddress(message.getFrom());
+			BuddyHandler.setIsMyCityUser(bareAddr);
+			BuddyHandler.updateLocation( bareAddr, 
 										 Double.parseDouble(matchRes.get(0)),
 										 Double.parseDouble(matchRes.get(1)),
 										 matchRes.get(2));
@@ -293,5 +346,11 @@ public class GTalkHandler {
 				mService.sendPacket(msg);
 			}
 		}
+	}
+	
+	public static Location getLastKnownLocation() {
+		if ( mService != null )
+			return mService.getLastKnownLocation();
+		return null;
 	}
 }

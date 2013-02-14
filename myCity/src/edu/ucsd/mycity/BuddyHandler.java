@@ -9,6 +9,8 @@ import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
+import com.google.android.maps.GeoPoint;
+
 import android.location.Location;
 import android.util.Log;
 
@@ -73,10 +75,18 @@ public class BuddyHandler {
 		}
 	}
 	
-	public static ArrayList<BuddyEntry> getNearbyBuddies(Location loc, float maxDistance) {
+	public static ArrayList<BuddyEntry> getBuddiesOnMap(GeoPoint center, int latSpan, int lonSpan) {
 		ArrayList<BuddyEntry> res = new ArrayList<BuddyEntry>();
+		
+		int latMin = center.getLatitudeE6()-(latSpan/2);
+		int latMax = center.getLatitudeE6()+(latSpan/2);
+		int lonMin = center.getLongitudeE6()-(lonSpan/2);
+		int lonMax = center.getLongitudeE6()+(lonSpan/2);
+		
 		for (BuddyEntry buddy : buddies.values()) {
-			if ( buddy.isMyCityUser() && loc.distanceTo(buddy.getLocation()) <= maxDistance ) {
+			int lat = (int) (buddy.getLocation().getLatitude() * 1E6);
+			int lon = (int) (buddy.getLocation().getLongitude() * 1E6);
+			if ( buddy.isMyCityUser() && lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax ) {
 				res.add(buddy);
 			}
 		}

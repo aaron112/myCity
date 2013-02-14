@@ -7,7 +7,7 @@
     <FrameLayout
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-        <com.google.android.maps.MapView
+        <edu.ucsd.mycity.maptrack.TrackedMapView
         android:id="@+id/mapView"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
