@@ -60,6 +60,8 @@ public class GTalkService extends Service implements LocationListener {
 	private Location lastKnownLocation = null;
 	private long updateInterval = 0;
 	
+	// TODO: setup timer to force update at an interval
+	
 	private XMPPConnection connection = null;
 	private SharedPreferences prefs;
 	private OnSharedPreferenceChangeListener prefsListener;
@@ -124,8 +126,7 @@ public class GTalkService extends Service implements LocationListener {
 	    }
 		super.onDestroy();
 	}
-
-
+	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		int f =  super.onStartCommand(intent, flags, startId);
@@ -214,7 +215,7 @@ public class GTalkService extends Service implements LocationListener {
 
 	            // Process incoming message for XML Location
 	            if ( GTalkHandler.processProbe(packet) ) {
-	            	// Send new location to our newly added buddy
+	            	// Return the favor
 	            	sendNewLocation(lastKnownLocation, fromAddr);
 	            	return;
 	            }
@@ -352,7 +353,7 @@ public class GTalkService extends Service implements LocationListener {
 			return;
 		
 		if ( connection != null && connection.isAuthenticated() ) {
-			Log.d(TAG, "Broadcasting new location");
+			Log.d(TAG, "Broadcasting new location...");
 			
 			// Build GPX Message:
 			DecimalFormat dForm = new DecimalFormat("###.######");
@@ -374,6 +375,7 @@ public class GTalkService extends Service implements LocationListener {
 			}
 			
 			for (BuddyEntry buddy : buddies) {
+				Log.d(TAG, "New Location sent to: "+buddy.getUser());
 				msg.setTo( buddy.getUser() );
 				sendPacket(msg);
 			}
@@ -448,8 +450,6 @@ public class GTalkService extends Service implements LocationListener {
     	} catch (android.os.RemoteException e1) {
     		Log.w(getClass().getName(), "Exception sending callback message", e1);
     	}
-	        
-		// TODO: Show notification on new chat messgae
 	}
 	
 	private void notifyLocation(Location location) {
@@ -458,6 +458,8 @@ public class GTalkService extends Service implements LocationListener {
     	b.putInt("type", GTalkService.HANDLER_MSG_LOCATION_UPD);
     	b.putParcelable("location", location);
     	msg.setData(b);
+    	
+    	Log.d(TAG, "notifyLocation");
     	
     	// send message to the handler with the current message handler
     	try {

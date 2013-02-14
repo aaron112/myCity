@@ -11,6 +11,10 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
+import edu.ucsd.mycity.listeners.BuddyLocationClient;
+import edu.ucsd.mycity.listeners.ChatClient;
+import edu.ucsd.mycity.listeners.LocationClient;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -40,6 +44,7 @@ public class GTalkHandler {
 	
 	private static ArrayList<ChatClient> chatClients = new ArrayList<ChatClient>();
 	private static ArrayList<LocationClient> locationClients = new ArrayList<LocationClient>();
+	private static ArrayList<BuddyLocationClient> buddyLocationClients = new ArrayList<BuddyLocationClient>();
 	
 	// Handler for GTalkService
 	private static Handler mHandler = new Handler() {
@@ -50,10 +55,12 @@ public class GTalkHandler {
 			
 			switch (msgtype) {
 			case GTalkService.HANDLER_MSG_CHAT_UPD:
+				Log.d(TAG, "handleMessage: received chat_upd from service");
 				notifyChatClients( b.getString("contact") );
 				break;
 				
 			case GTalkService.HANDLER_MSG_LOCATION_UPD:
+				Log.d(TAG, "handleMessage: received location_upd from service");
 				Location location = (Location)b.getParcelable("location");
 				notifyLocationClients( location );
 				break;
@@ -82,6 +89,23 @@ public class GTalkHandler {
 	};
 	
 	// Subject in Observer Pattern
+	public static void registerChatClient(ChatClient o) {
+		if ( !chatClients.contains(o) )
+			chatClients.add(o);
+	}
+	public static void removeChatClient(ChatClient o) {
+		int i = chatClients.indexOf(o);
+		if (i >= 0) {
+			chatClients.remove(i);
+		}
+	}
+	public static void notifyChatClients(String from) {
+		for (int i = 0; i < chatClients.size(); ++i) {
+			ChatClient chatClient = (ChatClient)chatClients.get(i);
+			chatClient.onChatUpdate(from);
+		}
+	}
+
 	public static void registerLocationClient(LocationClient o) {
 		if ( !locationClients.contains(o) )
 			locationClients.add(o);
@@ -98,21 +122,21 @@ public class GTalkHandler {
 			locationClient.onLocationUpdate(location);
 		}
 	}
-	
-	public static void registerChatClient(ChatClient o) {
-		if ( !chatClients.contains(o) )
-			chatClients.add(o);
+
+	public static void registerBuddyLocationClient(BuddyLocationClient o) {
+		if ( !buddyLocationClients.contains(o) )
+			buddyLocationClients.add(o);
 	}
-	public static void removeChatClient(ChatClient o) {
-		int i = chatClients.indexOf(o);
+	public static void removeBuddyLocationClient(BuddyLocationClient o) {
+		int i = buddyLocationClients.indexOf(o);
 		if (i >= 0) {
-			chatClients.remove(i);
+			buddyLocationClients.remove(i);
 		}
 	}
-	public static void notifyChatClients(String from) {
-		for (int i = 0; i < chatClients.size(); ++i) {
-			ChatClient chatClient = (ChatClient)chatClients.get(i);
-			chatClient.onChatUpdate(from);
+	public static void notifyBuddyLocationClients() {
+		for (int i = 0; i < buddyLocationClients.size(); ++i) {
+			BuddyLocationClient buddyLocationClient = (BuddyLocationClient)buddyLocationClients.get(i);
+			buddyLocationClient.onBuddyLocationUpdate();
 		}
 	}
 	
@@ -303,6 +327,8 @@ public class GTalkHandler {
 			return true;
 		}
 		
+		// Return GPX to the prober
+		
 		return false;
 	}
 
@@ -320,6 +346,8 @@ public class GTalkHandler {
 										 Double.parseDouble(matchRes.get(0)),
 										 Double.parseDouble(matchRes.get(1)),
 										 matchRes.get(2));
+			notifyBuddyLocationClients();
+			
 			return true;
 		}
 		
@@ -336,6 +364,7 @@ public class GTalkHandler {
 			
 			if ( to == null ) {
 				// Broadcast
+				Log.d(TAG, "Broadcasting PROBEMSG...");
 				buddies = BuddyHandler.getMyCityBuddies();
 			} else {
 				buddies.add( new BuddyEntry("", to, null) );

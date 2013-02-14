@@ -84,6 +84,9 @@ public class BuddyHandler {
 		int lonMax = center.getLongitudeE6()+(lonSpan/2);
 		
 		for (BuddyEntry buddy : buddies.values()) {
+			if (buddy.getLocation() == null)
+				continue;
+			
 			int lat = (int) (buddy.getLocation().getLatitude() * 1E6);
 			int lon = (int) (buddy.getLocation().getLongitude() * 1E6);
 			if ( buddy.isMyCityUser() && lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax ) {

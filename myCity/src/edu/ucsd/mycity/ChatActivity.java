@@ -2,6 +2,8 @@ package edu.ucsd.mycity;
 
 import java.util.ArrayList;
 
+import edu.ucsd.mycity.listeners.ChatClient;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;

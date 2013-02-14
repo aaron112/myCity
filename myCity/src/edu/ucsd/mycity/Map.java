@@ -1,5 +1,6 @@
 package edu.ucsd.mycity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.ProgressDialog;
@@ -23,10 +24,12 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
+import edu.ucsd.mycity.listeners.BuddyLocationClient;
+import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
 import edu.ucsd.mycity.maptrack.TrackedMapView;
 
-public class Map extends MapActivity implements LocationClient, OnMapViewChangeListener {
+public class Map extends MapActivity implements LocationClient, BuddyLocationClient, OnMapViewChangeListener {
 	// This is MainActivity
 	final String TAG = "MainActivity";
 	
@@ -38,7 +41,8 @@ public class Map extends MapActivity implements LocationClient, OnMapViewChangeL
 	private GeoPoint currentPoint;
 	private Location currentLocation = null;
 	
-	private MyOverlay currPos= null;
+	private OverlayPins currPosPin = null;
+	private OverlayPins currBuddyPins = null;
 	
 	private Button refreshBtn;
 
@@ -85,12 +89,14 @@ public class Map extends MapActivity implements LocationClient, OnMapViewChangeL
 	    Log.i(TAG, "onResume");
 	    super.onResume();
 	    GTalkHandler.registerLocationClient(this);
+	    GTalkHandler.registerBuddyLocationClient(this);
 	}
 	
 	@Override
 	protected void onPause() {
 	    Log.i(TAG, "onResume");
 	    GTalkHandler.removeLocationClient(this);
+	    GTalkHandler.removeBuddyLocationClient(this);
 	    super.onPause();
 	}
 	
@@ -98,6 +104,7 @@ public class Map extends MapActivity implements LocationClient, OnMapViewChangeL
 	protected void onDestroy() {
 	    Log.i(TAG, "onDestroy");
 	    GTalkHandler.removeLocationClient(this);
+	    GTalkHandler.removeBuddyLocationClient(this);
 		super.onDestroy();
 		//
 	}
@@ -161,7 +168,24 @@ public class Map extends MapActivity implements LocationClient, OnMapViewChangeL
 	public void onMapViewChange(MapView mapView, GeoPoint newCenter,
 			GeoPoint oldCenter, int newZoom, int oldZoom) {
 		Log.d(TAG, "onMapViewChange!");
-		// TODO Redraw pins
+		// Redraw pins
+		drawBuddyPositionOverlay();
+	    mapView.invalidate();
+	}
+
+	@Override
+	public void onLocationUpdate(Location location) {
+		Log.d(TAG, "onLocationUpdate");
+		setCurrentLocation(location);
+		animateToCurrentLocation();
+	}
+	
+	@Override
+	public void onBuddyLocationUpdate() {
+		// Redraw pins
+		Log.d(TAG, "onBuddyLocationUpdate");
+		drawBuddyPositionOverlay();
+	    mapView.invalidate();
 	}
 	
 	public void updateLocation(){
@@ -175,7 +199,7 @@ public class Map extends MapActivity implements LocationClient, OnMapViewChangeL
 	}
 	
 	public void animateToCurrentLocation() {
-	    if(currentPoint!=null){
+	    if (currentPoint != null) {
 	        mapController.animateTo(currentPoint);
 	    }
 	}
@@ -192,14 +216,35 @@ public class Map extends MapActivity implements LocationClient, OnMapViewChangeL
 	
 	public void drawCurrPositionOverlay(){
 	    List<Overlay> overlays = mapView.getOverlays();
-	    overlays.remove(currPos);
+	    overlays.remove(currPosPin);
+	    
 	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
-	    currPos = new MyOverlay(marker,mapView);
-	    if(currentPoint!=null){
-	        OverlayItem overlayitem = new OverlayItem(currentPoint, "Me", GTalkHandler.getUserBareAddr());
-	        currPos.addOverlay(overlayitem);
-	        overlays.add(currPos);
-	        currPos.setCurrentLocation(currentLocation);
+	    currPosPin = new OverlayPins(marker, mapView);
+	    if (currentPoint != null) {
+	        currPosPin.addOverlay (new OverlayItem(currentPoint, "Me", GTalkHandler.getUserBareAddr()) );
+	        overlays.add(currPosPin);
+	    }
+	}
+	
+	public void drawBuddyPositionOverlay() {
+	    List<Overlay> overlays = mapView.getOverlays();
+	    overlays.remove(currBuddyPins);
+	    
+	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
+	    currBuddyPins = new OverlayPins(marker, mapView);
+	    
+	    ArrayList<BuddyEntry> buddies = BuddyHandler.getBuddiesOnMap(mapView.getMapCenter(),
+	    															 mapView.getLatitudeSpan(),
+	    															 mapView.getLongitudeSpan());
+	    if ( !buddies.isEmpty() ) {
+	    	for (BuddyEntry buddy : buddies) {
+	    		if (buddy.getLocation() == null)
+	    			continue;
+	    		
+		    	currBuddyPins.addOverlay(new OverlayItem( toGeoPoint(buddy.getLocation()),
+		    							 buddy.getUser(), buddy.getPresence().toString() ));
+	    	}
+	        overlays.add(currBuddyPins);
 	    }
 	}
 	
@@ -234,13 +279,12 @@ public class Map extends MapActivity implements LocationClient, OnMapViewChangeL
 	}
 
 	@Override
-	public void onLocationUpdate(Location location) {
-		setCurrentLocation(location);
-		animateToCurrentLocation();
-	}
-
-	@Override
 	protected boolean isRouteDisplayed() {
 		return false;
 	}
+	
+	private static GeoPoint toGeoPoint(Location l) {
+		return new GeoPoint( (int)(l.getLatitude()*1E6), (int)(l.getLongitude()*1E6) );
+	}
+
 }
