@@ -57,7 +57,8 @@ public final class R {
         public static final int activity_chat=0x7f030001;
         public static final int activity_map=0x7f030002;
         public static final int balloon_overlay=0x7f030003;
-        public static final int listitem=0x7f030004;
+        public static final int listbuddy=0x7f030004;
+        public static final int listitem=0x7f030005;
     }
     public static final class menu {
         public static final int activity_buddy_list=0x7f090000;

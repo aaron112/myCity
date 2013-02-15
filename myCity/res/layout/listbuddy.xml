@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:android1="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android1:lineSpacingExtra="5dp"
+    android1:lines="1"
+    android1:scrollbars="vertical"
+    android1:textSize="25sp"
+    android1:textStyle="bold" >
+
+</TextView>
