@@ -131,12 +131,15 @@ public class GTalkService extends Service implements LocationListener {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		int f =  super.onStartCommand(intent, flags, startId);
 		Log.d(TAG, "Service onStart");
-		
+
 		// Set up callbackMessenger
-		callbackMessenger = (Messenger) intent.getExtras().get("callbackMessenger");
+		if ( intent != null && intent.getExtras().containsKey("callbackMessenger")) {
+			callbackMessenger = (Messenger) intent.getExtras().get("callbackMessenger");
+			
+			// Set up Location Manager
+			setLocationManager();
+		} // else: Starting without intent - Run nothing
 		
-		// Set up Location Manager
-		setLocationManager();
 		
 		return f;
 	}

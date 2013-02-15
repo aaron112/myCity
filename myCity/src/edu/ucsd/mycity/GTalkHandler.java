@@ -371,6 +371,7 @@ public class GTalkHandler {
 			}
 			
 			for (BuddyEntry buddy : buddies) {
+				Log.d(TAG, "Probing: "+buddy.getUser());
 				msg.setTo( buddy.getUser() );
 				mService.sendPacket(msg);
 			}

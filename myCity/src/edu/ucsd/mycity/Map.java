@@ -3,6 +3,7 @@ package edu.ucsd.mycity;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -44,8 +45,8 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	private GeoPoint currentPoint;
 	private Location currentLocation = null;
 	
-	private OverlayPins currPosPin = null;
-	private OverlayPins currBuddyPins = null;
+	private PinsOverlay currPosPin = null;
+	private PinsOverlay currBuddyPins = null;
 	
 	private Button refreshBtn;
 	private int refreshBtnState;
@@ -202,7 +203,6 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 		Log.d(TAG, "onMapViewChange!");
 		// Redraw pins
 		drawBuddyPositionOverlay();
-	    mapView.invalidate();
 	}
 
 	@Override
@@ -217,7 +217,6 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 		// Redraw pins
 		Log.d(TAG, "onBuddyLocationUpdate");
 		drawBuddyPositionOverlay();
-	    mapView.invalidate();
 	}
 	
 	public void updateLocation(){
@@ -251,10 +250,12 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	    overlays.remove(currPosPin);
 	    
 	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
-	    currPosPin = new OverlayPins(marker, mapView);
+	    currPosPin = new PinsOverlay(marker, mapView);
 	    if (currentPoint != null) {
 	        currPosPin.addOverlay (new OverlayItem(currentPoint, "Me", GTalkHandler.getUserBareAddr()) );
 	        overlays.add(currPosPin);
+
+		    mapView.invalidate();
 	    }
 	}
 	
@@ -263,7 +264,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	    overlays.remove(currBuddyPins);
 	    
 	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
-	    currBuddyPins = new OverlayPins(marker, mapView);
+	    currBuddyPins = new PinsOverlay(marker, mapView);
 	    
 	    ArrayList<BuddyEntry> buddies = BuddyHandler.getBuddiesOnMap(mapView.getMapCenter(),
 	    															 mapView.getLatitudeSpan(),
@@ -277,6 +278,8 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 		    							 buddy.getUser(), buddy.getPresence().toString() ));
 	    	}
 	        overlays.add(currBuddyPins);
+
+		    mapView.invalidate();
 	    }
 	}
 	

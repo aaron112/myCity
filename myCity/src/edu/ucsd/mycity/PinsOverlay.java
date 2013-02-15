@@ -10,12 +10,12 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 import com.readystatesoftware.mapviewballoons.BalloonItemizedOverlay;
 
-public class OverlayPins extends BalloonItemizedOverlay<OverlayItem> {
+public class PinsOverlay extends BalloonItemizedOverlay<OverlayItem> {
 	
 	private Context mContext;
 	private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
 	
-	public OverlayPins(Drawable defaultMarker, MapView mapView) {
+	public PinsOverlay(Drawable defaultMarker, MapView mapView) {
 	    super(boundCenter(defaultMarker), mapView);
 	    boundCenter(defaultMarker);
 	    mContext = mapView.getContext();

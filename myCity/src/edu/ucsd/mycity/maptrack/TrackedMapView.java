@@ -7,6 +7,7 @@ import android.view.MotionEvent;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
 
+
 public class TrackedMapView extends MapView
 {	
 	
