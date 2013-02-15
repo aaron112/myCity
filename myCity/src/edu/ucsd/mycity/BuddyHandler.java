@@ -107,4 +107,14 @@ public class BuddyHandler {
 		
 		return res;
 	}
+	
+	public static ArrayList<BuddyEntry> getBuddies() {
+		ArrayList<BuddyEntry> res = new ArrayList<BuddyEntry>();
+		for (BuddyEntry buddy : buddies.values()) {
+				res.add(buddy);
+
+		}
+		
+		return res;
+	}
 }

@@ -31,7 +31,10 @@ import edu.ucsd.mycity.maptrack.TrackedMapView;
 
 public class Map extends MapActivity implements LocationClient, BuddyLocationClient, OnMapViewChangeListener {
 	// This is MainActivity
-	final String TAG = "MainActivity";
+	private final String TAG = "MainActivity";
+	public static final int REFRESH_BTN_STATE_TOGGLE = -1;
+	public static final int REFRESH_BTN_STATE_BROWSING = 0;
+	public static final int REFRESH_BTN_STATE_FOLLOWING = 1;
 	
 	private SharedPreferences prefs;
 	
@@ -45,7 +48,28 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	private OverlayPins currBuddyPins = null;
 	
 	private Button refreshBtn;
-
+	private int refreshBtnState;
+	
+	// setToState = -1 for TOGGLE
+	private void toggleRefreshBtn(int setToState) {
+		if (setToState == REFRESH_BTN_STATE_TOGGLE) {
+			if (refreshBtnState == REFRESH_BTN_STATE_BROWSING)
+				refreshBtnState = REFRESH_BTN_STATE_FOLLOWING;
+			else
+				refreshBtnState = REFRESH_BTN_STATE_BROWSING;
+		} else {
+			refreshBtnState = setToState;
+		}
+		
+		if (refreshBtnState == REFRESH_BTN_STATE_BROWSING) {
+			refreshBtn.setText(R.string.button_lock_at_my_location);
+		} else {
+			refreshBtn.setText(R.string.button_unlock);
+		}
+		// Save to prefs
+		prefs.edit().putInt("pref_refreshbutton_state", refreshBtnState);
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 	    Log.i(TAG, "onCreate");
@@ -69,11 +93,19 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 		animateToCurrentLocation();
 		
         refreshBtn = (Button) findViewById(R.id.updateLocation);
+		refreshBtnState = prefs.getInt("pref_refreshbutton_state", REFRESH_BTN_STATE_BROWSING);
+		toggleRefreshBtn(refreshBtnState);
         refreshBtn.setOnClickListener(new View.OnClickListener() {   
             @Override
             public void onClick(View v) {
             	updateLocation();
-            	animateToCurrentLocation();
+        		toggleRefreshBtn(REFRESH_BTN_STATE_TOGGLE);
+            	
+            	if (refreshBtnState == REFRESH_BTN_STATE_FOLLOWING) {
+            		animateToCurrentLocation();
+            	} else {
+            		mapView.postInvalidate();	// Force the overlays to redraw
+            	}
             }
         });
         
