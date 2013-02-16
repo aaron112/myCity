@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.XMPPConnection;
@@ -45,6 +46,7 @@ import android.widget.Toast;
 public class GTalkService extends Service implements LocationListener {
 	public static final int HANDLER_MSG_LOCATION_UPD = 1;
 	public static final int HANDLER_MSG_CHAT_UPD = 2;
+	public static final int HANDLER_MSG_CONNECTION_UPD = 3;
 	
 	private static final String TAG = "GTalkService";
 	private static final String HOST = "talk.google.com";
@@ -124,7 +126,6 @@ public class GTalkService extends Service implements LocationListener {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		int f =  super.onStartCommand(intent, flags, startId);
 		Log.d(TAG, "Service onStart");
 
 		// Set up callbackMessenger
@@ -135,8 +136,7 @@ public class GTalkService extends Service implements LocationListener {
 			setLocationManager();
 		} // else: Starting without intent - Run nothing
 		
-		
-		return f;
+		return START_NOT_STICKY;
 	}
 
 	/**
@@ -200,40 +200,71 @@ public class GTalkService extends Service implements LocationListener {
 	 */
 	public void setConnection() {
 	    if (connection != null) {
-	      // Add a packet listener to get messages sent to us
-	      PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
-	      connection.addPacketListener(new PacketListener() {
-	    	  
-	        @Override
-	        public void processPacket(Packet packet) {
-	          Message message = (Message) packet;
-	          if (message.getBody() != null) {
-	            String fromAddr = BuddyHandler.getBareAddr(message.getFrom());
-	            Log.i(TAG, "Text Recieved " + message.getBody() + " from " +  fromAddr);
+	    	// Add a connection listener to be notified when connection problem occurs
+			connection.addConnectionListener(new ConnectionListener() {
+				@Override
+				public void connectionClosed() {
+					Log.d(TAG, "Smack: connectionClosed");
+					makeToast("My City: Disconnected from Google Talk");
+					notifyConnection();
+				}
 
-	            // Process incoming message for XML Location
-	            if ( GTalkHandler.processProbe(packet) ) {
-	            	// Return the favor
-	            	if ( !GTalkHandler.sendNewLocation(lastKnownLocation, fromAddr) ) {
-	            		Log.d(TAG, "Location not available, send back probe instead.");
-	            		GTalkHandler.sendProbe(fromAddr);	// If location isn't available, send back probe instead
-	            	}
-	            	return;
-	            }
-	            if ( GTalkHandler.processGPX(packet) )
-	            	return;
-	            
-	            lastMsgFrom = fromAddr;
-	            addMessage(fromAddr, GTalkHandler.getUserName(fromAddr) + ":");
-	            addMessage(fromAddr, message.getBody());
-	            notifyChat(fromAddr);
-	            
-	            makeChatNotification(fromAddr, message.getBody());
-	          }
-	        }
-	        
-	      }, filter);
-	    }
+				@Override
+				public void connectionClosedOnError(Exception e) {
+					Log.d(TAG, "Smack: connectionClosedOnError: "+e);
+					makeToast("My City: Connection Error - You have been disconnected from Google Talk");
+					notifyConnection();
+				}
+
+				@Override
+				public void reconnectingIn(int in) {
+					Log.d(TAG, "Smack: reconnectingIn: "+in);
+				}
+
+				@Override
+				public void reconnectionFailed(Exception e) {
+					Log.d(TAG, "Smack: reconnectionFailed: "+e);
+				}
+
+				@Override
+				public void reconnectionSuccessful() {
+					Log.d(TAG, "Smack: reconnectionSuccessful");
+				}
+				
+			});
+			
+			// Add a packet listener to get messages sent to us
+			PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
+			connection.addPacketListener(new PacketListener() {
+				@Override
+				public void processPacket(Packet packet) {
+					Message message = (Message) packet;
+					if (message.getBody() != null) {
+						String fromAddr = BuddyHandler.getBareAddr(message.getFrom());
+						Log.i(TAG, "Text Recieved " + message.getBody() + " from " +  fromAddr);
+						
+						// Process incoming message for XML Location
+						if ( GTalkHandler.processProbe(packet) ) {
+							// Return the favor
+							if ( !GTalkHandler.sendNewLocation(lastKnownLocation, fromAddr) ) {
+								Log.d(TAG, "Location not available, send back probe instead.");
+								GTalkHandler.sendProbe(fromAddr);	// If location isn't available, send back probe instead
+								// TODO: What if both devices are unavailable?
+							}
+							return;
+						}
+						if ( GTalkHandler.processGPX(packet) )
+							return;
+					
+						lastMsgFrom = fromAddr;
+						addMessage(fromAddr, GTalkHandler.getUserName(fromAddr) + ":");
+						addMessage(fromAddr, message.getBody());
+						notifyChat(fromAddr);
+						makeChatNotification(fromAddr, message.getBody());
+					}
+				}
+			}, filter);
+		}
 	}
 	
 	public Roster getRoster() {
@@ -338,17 +369,17 @@ public class GTalkService extends Service implements LocationListener {
 
 	@Override
 	public void onProviderDisabled(String arg0) {
-		// No nothing
+		// Do nothing
 	}
 
 	@Override
 	public void onProviderEnabled(String arg0) {
-		// No nothing
+		// Do nothing
 	}
 
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
-		// No nothing
+		// Do nothing
 	}
 	
 	
@@ -366,7 +397,11 @@ public class GTalkService extends Service implements LocationListener {
 		return location;
 	}
 	
-	
+	/**
+	 * Used to make an Android Notification for new messages
+	 * @param bareAddr
+	 * @param msg
+	 */
 	private void makeChatNotification(String bareAddr, String msg) {
 		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
 		        .setSmallIcon(R.drawable.new_message_2, 3)
@@ -417,13 +452,8 @@ public class GTalkService extends Service implements LocationListener {
     	b.putInt("type", GTalkService.HANDLER_MSG_CHAT_UPD);
     	b.putString("contact", from);
     	msg.setData(b);
-    	
-    	// send message to the handler with the current message handler
-    	try {
-    		callbackMessenger.send(msg);
-    	} catch (android.os.RemoteException e1) {
-    		Log.w(getClass().getName(), "Exception sending callback message", e1);
-    	}
+
+    	sendNotification(msg);
 	}
 	
 	private void notifyLocation() {
@@ -433,9 +463,23 @@ public class GTalkService extends Service implements LocationListener {
     	msg.setData(b);
     	
     	Log.d(TAG, "notifyLocation");
+
+    	sendNotification(msg);
+	}
+	
+	private void notifyConnection() {
+		android.os.Message msg = new android.os.Message();
+		Bundle b = new Bundle();
+    	b.putInt("type", GTalkService.HANDLER_MSG_CONNECTION_UPD);
+    	msg.setData(b);
     	
-    	// send message to the handler with the current message handler
-    	try {
+    	Log.d(TAG, "notifyConnection");
+    	
+    	sendNotification(msg);
+	}
+	
+	private void sendNotification(android.os.Message msg) {
+		try {
     		callbackMessenger.send(msg);
     	} catch (android.os.RemoteException e1) {
     		Log.w(getClass().getName(), "Exception sending callback message", e1);

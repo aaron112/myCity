@@ -24,16 +24,19 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
+import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
 import edu.ucsd.mycity.maptrack.TrackedMapView;
 
-public class Map extends MapActivity implements LocationClient, BuddyLocationClient, OnMapViewChangeListener {
+public class Map extends MapActivity implements LocationClient, ConnectionClient, BuddyLocationClient, OnMapViewChangeListener {
 	// This is MainActivity
 	private final String TAG = "MainActivity";
 	public static final int REFRESH_BTN_STATE_TOGGLE = -1;
 	public static final int REFRESH_BTN_STATE_BROWSING = 0;
 	public static final int REFRESH_BTN_STATE_FOLLOWING = 1;
+	public static final int LOGIN_MENU_STATE_LOGGED_OUT = 0;
+	public static final int LOGIN_MENU_STATE_LOGGED_IN = 1;
 	
 	private SharedPreferences prefs;
 	
@@ -45,9 +48,22 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	
 	private PinsOverlay currPosPin = null;
 	private PinsOverlay currBuddyPins = null;
-	
+
+	private MenuItem loginMenuItem;
+	private int loginMenuItemState;
 	private Button refreshBtn;
 	private int refreshBtnState;
+	
+	
+	public void setLoginMenu(int setToState) {
+		loginMenuItemState = setToState;
+		
+		if (loginMenuItemState == LOGIN_MENU_STATE_LOGGED_OUT) {
+			loginMenuItem.setTitle(R.string.menu_login);
+		} else {
+			loginMenuItem.setTitle(R.string.menu_logout);
+		}
+	}
 	
 	// setToState = -1 for TOGGLE
 	private void toggleRefreshBtn(int setToState) {
@@ -75,8 +91,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 		super.onCreate(savedInstanceState);
 	    
 		prefs = PreferenceManager.getDefaultSharedPreferences( getApplicationContext() );
-		GTalkHandler.context = getApplicationContext();
-		GTalkHandler.startService();
+		GTalkHandler.startService( getApplicationContext() );
 		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_map);
@@ -100,11 +115,8 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
             	updateLocation();
         		toggleRefreshBtn(REFRESH_BTN_STATE_TOGGLE);
             	
-            	if (refreshBtnState == REFRESH_BTN_STATE_FOLLOWING) {
+            	if (refreshBtnState == REFRESH_BTN_STATE_FOLLOWING)
             		animateToCurrentLocation();
-            	} else {
-            		//mapView.postInvalidate();	// Force the overlays to redraw
-            	}
             }
         });
         
@@ -120,6 +132,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	    Log.i(TAG, "onResume");
 	    super.onResume();
 	    GTalkHandler.registerLocationClient(this);
+	    GTalkHandler.registerConnectionClient(this);
 	    GTalkHandler.registerBuddyLocationClient(this);
 	}
 	
@@ -127,6 +140,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	protected void onPause() {
 	    Log.i(TAG, "onResume");
 	    GTalkHandler.removeLocationClient(this);
+	    GTalkHandler.removeConnectionClient(this);
 	    GTalkHandler.removeBuddyLocationClient(this);
 	    super.onPause();
 	}
@@ -135,6 +149,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	protected void onDestroy() {
 	    Log.i(TAG, "onDestroy");
 	    GTalkHandler.removeLocationClient(this);
+	    GTalkHandler.removeConnectionClient(this);
 	    GTalkHandler.removeBuddyLocationClient(this);
 		super.onDestroy();
 		//
@@ -144,6 +159,9 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_map, menu);
+
+		loginMenuItem = (MenuItem) menu.findItem(R.id.menu_login);
+		loginMenuItemState = LOGIN_MENU_STATE_LOGGED_OUT;
 		return true;
 	}
 	
@@ -167,7 +185,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	    
 	    case R.id.menu_forceupdate:
 	    	GTalkHandler.sendProbe(null);
-    		Toast.makeText(this, "Force Update Invoked", Toast.LENGTH_LONG).show();
+    		Toast.makeText(this, "Force Update Invoked - Wait for Responses from other Clients", Toast.LENGTH_LONG).show();
 	    	return true;
 	    	
 	    case R.id.menu_settings:
@@ -175,19 +193,24 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	    	return true;
 	    	
 	    case R.id.menu_login:
-	    	if ( GTalkHandler.isAuthenticated() )
-	    		Toast.makeText(this, "Already Logged in!", Toast.LENGTH_LONG).show();
-	    	else {
-	    		if ( checkConfig() ) {
-	    	    	GTalkConnect();
-	    	    }
+	    	if ( loginMenuItemState == LOGIN_MENU_STATE_LOGGED_IN ) {
+	    		// Proceed logout
+	    		GTalkHandler.disconnect();
+	    	} else {
+	    		// Proceed login
+	    		if ( GTalkHandler.isAuthenticated() )
+		    		Toast.makeText(this, "Error: Already Logged in!", Toast.LENGTH_LONG).show();
+		    	else
+		    		if ( checkConfig() )
+		    			GTalkConnect();
 	    	}
 	    	return true;
 	    
-	    case R.id.menu_logout:
+	    case R.id.menu_quit:
+	    	// Shutdown service, shutdown app
 	    	GTalkHandler.disconnect();
-	    	Toast.makeText(this, "Logged out of Google Talk", Toast.LENGTH_LONG).show();
-	    	return true;
+	    	GTalkHandler.stopService();
+	    	finish();
 	    	
 	    default:
 	    	return super.onOptionsItemSelected(item);
@@ -209,6 +232,15 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 		updateLocation();
 		if (refreshBtnState == Map.REFRESH_BTN_STATE_FOLLOWING)
 			animateToCurrentLocation();
+	}
+
+	@Override
+	public void onConnectionUpdate() {
+		// Check connection state:
+		// Only need to handle disconnection
+		if ( !GTalkHandler.isConnected() ) {
+			setLoginMenu(LOGIN_MENU_STATE_LOGGED_OUT);
+		}
 	}
 	
 	@Override
@@ -288,9 +320,14 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	public void GTalkConnect() {
 		final ProgressDialog dialog = ProgressDialog.show(this, "Connecting...", "Please wait...", false);
 		
+		
+		
 	    Thread t = new Thread(new Runnable() {
 	      	public void run() {
 	      		GTalkHandler.connect();
+	      		if ( GTalkHandler.isAuthenticated() )
+	      			setLoginMenu(LOGIN_MENU_STATE_LOGGED_IN);
+	      		
 	    		dialog.dismiss();
 	    	}
 	    });

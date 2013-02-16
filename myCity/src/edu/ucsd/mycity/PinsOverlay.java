@@ -23,13 +23,11 @@ public class PinsOverlay extends BalloonItemizedOverlay<BuddyOverlayItem> {
 	
 	@Override
 	protected BuddyOverlayItem createItem(int i) {
-	    // TODO Auto-generated method stub
 	    return overlays.get(i);
 	}
 	
 	@Override
 	    public int size() {
-	    // TODO Auto-generated method stub
 	    return overlays.size();
 	}
 	

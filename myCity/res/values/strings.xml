@@ -4,12 +4,13 @@
     <string name="app_name">My City</string>
     
     <string name="menu_buddyList">Contacts</string>
-    <string name="menu_chat">Conversations</string>
+    <string name="menu_chat">Chats</string>
     <string name="menu_closechat">Close Conversation</string>
     <string name="menu_forceupdate">Force Update</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_login">Login</string>
     <string name="menu_logout">Logout</string>
+    <string name="menu_quit">Quit</string>
     
     <string name="button_lock_at_my_location">Lock at My Location</string>
     <string name="button_unlock">Unlock</string>

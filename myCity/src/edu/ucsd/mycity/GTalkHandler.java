@@ -1,11 +1,7 @@
 package edu.ucsd.mycity;
 
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterListener;
@@ -15,10 +11,11 @@ import org.jivesoftware.smack.packet.Presence;
 
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.ChatClient;
+import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.listeners.RosterClient;
+import edu.ucsd.mycity.utils.GPX;
 
-import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -42,13 +39,14 @@ public class GTalkHandler {
 	
 	private static final String TAG = "GTalkHandler";
 	private static final String PROBEMSG = "myCityProbe";
-	public static Context context;
+	public static Context mContext;
 	
 	private static Roster roster;
 	
 	private static ArrayList<ChatClient> chatClients = new ArrayList<ChatClient>();
 	private static ArrayList<RosterClient> rosterClients = new ArrayList<RosterClient>();
 	private static ArrayList<LocationClient> locationClients = new ArrayList<LocationClient>();
+	private static ArrayList<ConnectionClient> connectionClients = new ArrayList<ConnectionClient>();
 	private static ArrayList<BuddyLocationClient> buddyLocationClients = new ArrayList<BuddyLocationClient>();
 	
 	// Handler for GTalkService
@@ -68,6 +66,14 @@ public class GTalkHandler {
 				Log.d(TAG, "handleMessage: received location_upd from service");
 				notifyLocationClients();
 				break;
+			
+			case GTalkService.HANDLER_MSG_CONNECTION_UPD:
+				Log.d(TAG, "handleMessage: received connection_upd from service");
+				notifyConnectionClients();
+				break;
+				
+			default:
+				Log.d(TAG, "handleMessage: unknown message received from service");
 			}
 			
 		}
@@ -103,7 +109,7 @@ public class GTalkHandler {
 			chatClients.remove(i);
 		}
 	}
-	public static void notifyChatClients(String from) {
+	private static void notifyChatClients(String from) {
 		for (int i = 0; i < chatClients.size(); ++i) {
 			ChatClient chatClient = (ChatClient)chatClients.get(i);
 			chatClient.onChatUpdate(from);
@@ -120,7 +126,7 @@ public class GTalkHandler {
 			rosterClients.remove(i);
 		}
 	}
-	public static void notifyRosterClients() {
+	private static void notifyRosterClients() {
 		for (int i = 0; i < rosterClients.size(); ++i) {
 			RosterClient rosterClient = (RosterClient)rosterClients.get(i);
 			rosterClient.onRosterUpdate();
@@ -137,10 +143,27 @@ public class GTalkHandler {
 			locationClients.remove(i);
 		}
 	}
-	public static void notifyLocationClients() {
+	private static void notifyLocationClients() {
 		for (int i = 0; i < locationClients.size(); ++i) {
 			LocationClient locationClient = (LocationClient)locationClients.get(i);
 			locationClient.onLocationUpdate();
+		}
+	}
+
+	public static void registerConnectionClient(ConnectionClient o) {
+		if ( !connectionClients.contains(o) )
+			connectionClients.add(o);
+	}
+	public static void removeConnectionClient(ConnectionClient o) {
+		int i = connectionClients.indexOf(o);
+		if (i >= 0) {
+			connectionClients.remove(i);
+		}
+	}
+	private static void notifyConnectionClients() {
+		for (int i = 0; i < connectionClients.size(); ++i) {
+			ConnectionClient connectionClient = (ConnectionClient)connectionClients.get(i);
+			connectionClient.onConnectionUpdate();
 		}
 	}
 
@@ -154,24 +177,26 @@ public class GTalkHandler {
 			buddyLocationClients.remove(i);
 		}
 	}
-	public static void notifyBuddyLocationClients() {
+	private static void notifyBuddyLocationClients() {
 		for (int i = 0; i < buddyLocationClients.size(); ++i) {
 			BuddyLocationClient buddyLocationClient = (BuddyLocationClient)buddyLocationClients.get(i);
 			buddyLocationClient.onBuddyLocationUpdate();
 		}
 	}
 	
-	public static void startService() {
-		if ( isServiceStarted )
+	public static void startService(Context appContext) {
+		if ( isServiceStarted || appContext == null )
 			return;
 		
 		Log.d(TAG, "Attempting to start service.");
-			
-		Intent intent = new Intent(context, GTalkService.class);
+		
+		mContext = appContext;
+		
+		Intent intent = new Intent(mContext, GTalkService.class);
 		intent.putExtra("callbackMessenger", new Messenger(mHandler));
 			
-		context.startService(intent);
-		context.bindService(intent, mConn, 0);
+		mContext.startService(intent);
+		mContext.bindService(intent, mConn, 0);
 	}
 	
 	public static void stopService() {
@@ -180,8 +205,8 @@ public class GTalkHandler {
 		
 		isServiceStarted = false;
 		BuddyHandler.clear();
-		context.unbindService(mConn);
-		context.stopService(new Intent(context, GTalkService.class));
+		mContext.unbindService(mConn);
+		mContext.stopService(new Intent(mContext, GTalkService.class));
 	}
 	
 	public static boolean isConnected() {
@@ -198,8 +223,8 @@ public class GTalkHandler {
 	
 	// Connect to GTalk XMPP Server, returns true if successful
 	public static boolean connect() {
-		// Start Service if not started, then call to connect method
-		startService();
+		//if ( !isServiceStarted )	// Service must be started before connecting
+		//	return false;
 		
 		while ( mService == null ) {}	// Wait until Service is set up
 		
@@ -258,7 +283,7 @@ public class GTalkHandler {
 		/***
 		Collection<RosterEntry> entries = roster.getEntries();
         for (RosterEntry entry : entries) {
-         // TODO:
+         // REFERENCE:
           Log.d(TAG,  "--------------------------------------");
           Log.d(TAG, "RosterEntry " + entry);
           Log.d(TAG, "User: " + entry.getUser());
@@ -366,7 +391,7 @@ public class GTalkHandler {
 	public static boolean processGPX(Packet packet) {
 		Message message = (Message) packet;
 		String chatContent = message.getBody();
-		ArrayList<String> matchRes = GPXParser.parseGPX(chatContent);
+		ArrayList<String> matchRes = GPX.parseGPX(chatContent);
 		
 		if (matchRes != null) {
 			Log.d(TAG, "matched GPX received from " + BuddyHandler.getBareAddr(message.getFrom()));
@@ -389,16 +414,19 @@ public class GTalkHandler {
 		if ( isServiceStarted && mService.isAuthenticated() ) {
 			ArrayList<BuddyEntry> buddies = new ArrayList<BuddyEntry>();
 			
-			Message msg = new Message("", Message.Type.chat);
-			msg.setBody(PROBEMSG);
-			
 			if ( bareAddr == null ) {
 				// Broadcast
-				Log.d(TAG, "Broadcasting PROBEMSG...");
 				buddies = BuddyHandler.getMyCityBuddies();
+				if (buddies.size() == 0) {
+					Log.d(TAG, "No my city buddy on list.");
+					return;
+				}
 			} else {
 				buddies.add( BuddyHandler.getBuddy(bareAddr) );
 			}
+			
+			Message msg = new Message("", Message.Type.chat);
+			msg.setBody(PROBEMSG);
 			
 			for (BuddyEntry buddy : buddies) {
 				Log.d(TAG, "Probing: "+buddy.getUser());
@@ -413,32 +441,25 @@ public class GTalkHandler {
 	// loc: new location
 	// to: bare address or null for broadcasting
 	// Return: turn if sent, false otherwise
-	@SuppressLint("SimpleDateFormat")
 	public static boolean sendNewLocation(Location loc, String bareAddr) {
 		if ( isServiceStarted && mService.isAuthenticated() ) {
 			Log.d(TAG, "Broadcasting new location...");
-			
-			// Build GPX Message:
-			DecimalFormat dForm = new DecimalFormat("###.######");
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-			String message = "<trkpt lat=\""+dForm.format(loc.getLatitude())+"\" lon=\""+dForm.format(loc.getLongitude())+"\">";
-			message += "<ele>"+loc.getAltitude()+"</ele>";
-			message += "<time>"+sdf.format(new Date(loc.getTime()))+"</time></trkpt>";
-			
-			Message msg = new Message("", Message.Type.chat);
-			msg.setBody(message);
-			
+
 			ArrayList<BuddyEntry> buddies = new ArrayList<BuddyEntry>();
 			
 			if ( bareAddr == null ) {
 				// Broadcast
 				buddies = BuddyHandler.getMyCityBuddies();
+				if (buddies.size() == 0) {
+					Log.d(TAG, "No my city buddy on list.");
+					return false;
+				}
 			} else {
 				buddies.add( BuddyHandler.getBuddy(bareAddr) );
 			}
 			
-			if (buddies.size() == 0)
-				Log.d(TAG, "No my city buddy on list.");
+			Message msg = new Message("", Message.Type.chat);
+			msg.setBody( GPX.buildGPX(loc.getLatitude(), loc.getLongitude(), loc.getAltitude(), loc.getTime()) );
 			
 			for (BuddyEntry buddy : buddies) {
 				Log.d(TAG, "New Location sent to: "+buddy.getUser());

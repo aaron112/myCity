@@ -91,6 +91,8 @@ public class BuddyList extends Activity implements RosterClient
 	{
 		roster = BuddyHandler.getBuddies();
 		listviewArray.clear();
+		// TODO: crashes when trying to rebuild list
+		
 		for (BuddyEntry entry : roster)
 		{
 			String display;

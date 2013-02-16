@@ -26,7 +26,7 @@ public class ChatActivity extends Activity implements ChatClient {
 	private ArrayList<String> messages = new ArrayList<String>();
 	private ArrayList<String> chats = new ArrayList<String>();
 	
-	private String contact = null;	// Current Contact for this CharActivity
+	private String contact;	// Current Contact for this CharActivity
 
 	private Spinner chating_with;
 	private EditText textMessage;
@@ -39,19 +39,34 @@ public class ChatActivity extends Activity implements ChatClient {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
 	    Log.d(TAG, "onCreate");
-		
-		Bundle b = getIntent().getExtras();
-		String incomingContact = b.getString("contact");
-		if ( incomingContact != null && !incomingContact.equals("") ) {
-			Log.d(TAG, "Using incoming Contact instead.");
-			contact = incomingContact;
-		}
-    
+
 		chating_with = (Spinner) this.findViewById(R.id.chating_with);
 		textMessage = (EditText) this.findViewById(R.id.chatET);
 		listview = (ListView) this.findViewById(R.id.listMessages);
 		listview.setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
-    
+		
+		Bundle b = getIntent().getExtras();
+		contact = b.getString("contact");
+		
+		if ( contact == null ) {
+			Log.d(TAG, "getLastMsgFrom");
+			contact = GTalkHandler.getLastMsgFrom();
+			if ( contact == null ) {
+				buildChatList();
+				if ( chats.isEmpty() ) {
+					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
+					finish();
+				} else {
+					Log.d(TAG, "Falling back to the first conversation on list.");
+					contact = chats.get(0);	// Falling back to the first conversation on list.
+				}
+			}
+		}
+		
+		buildMsgList();
+		buildChatList();
+		
+		
 		// Set a listener to switch chat "window"
 		chating_with.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
@@ -85,24 +100,6 @@ public class ChatActivity extends Activity implements ChatClient {
 				}
 			}
 		});
-		
-		if ( contact == null ) {
-			Log.d(TAG, "getLastMsgFrom");
-			contact = GTalkHandler.getLastMsgFrom();
-			if ( contact == null ) {
-				buildChatList();
-				if ( chats.isEmpty() ) {
-					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
-					finish();
-				} else {
-					Log.d(TAG, "Falling back to the first conversation on list.");
-					contact = chats.get(0);	// Falling back to the first conversation on list.
-				}
-			}
-		}
-
-		buildMsgList();
-		buildChatList();
     
 		// Register with GTalkHandler to get updates
 		GTalkHandler.registerChatClient(this);
