@@ -10,6 +10,7 @@ public class BuddyEntry {
 	private String user;
 	private Presence presence;
 	private boolean isMyCityUser = false;
+	private boolean isProbed = false;
 	private Location location = null;
 	
 	BuddyEntry(String name, String user, Presence presence) {
@@ -46,6 +47,13 @@ public class BuddyEntry {
 		this.isMyCityUser = isMyCityUser;
 	}
 	
+	public boolean isProbed() {
+		return isProbed;
+	}
+	public void setProbed(boolean isProbed) {
+		this.isProbed = isProbed;
+	}
+
 	public Location getLocation() {
 		return location;
 	}

@@ -1,9 +1,6 @@
 package edu.ucsd.mycity;
 
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -15,9 +12,7 @@ import org.jivesoftware.smack.filter.MessageTypeFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.util.StringUtils;
 
-import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -182,14 +177,14 @@ public class GTalkService extends Service implements LocationListener {
 		
 		try {
 			connection.login(username, password);
-			Log.i(TAG, "Logged in as " + StringUtils.parseBareAddress(connection.getUser()) );
+			Log.i(TAG, "Logged in as " + BuddyHandler.getBareAddr(connection.getUser()) );
 		} catch (XMPPException e) {
 			Log.e(TAG, "Failed to log in as " + username + ".");
 			makeToast("Unable to login to Google Talk. Please check your username and password.");
 			return false;
 		}
 		
-		makeToast("Logged in as " + StringUtils.parseBareAddress(connection.getUser()) + " (GTalk)");
+		makeToast("Logged in as " + BuddyHandler.getBareAddr(connection.getUser()) + " (GTalk)");
 		
 		return true;
 	}
@@ -213,13 +208,16 @@ public class GTalkService extends Service implements LocationListener {
 	        public void processPacket(Packet packet) {
 	          Message message = (Message) packet;
 	          if (message.getBody() != null) {
-	            String fromAddr = StringUtils.parseBareAddress(message.getFrom());
+	            String fromAddr = BuddyHandler.getBareAddr(message.getFrom());
 	            Log.i(TAG, "Text Recieved " + message.getBody() + " from " +  fromAddr);
 
 	            // Process incoming message for XML Location
 	            if ( GTalkHandler.processProbe(packet) ) {
 	            	// Return the favor
-	            	sendNewLocation(lastKnownLocation, fromAddr);
+	            	if ( !GTalkHandler.sendNewLocation(lastKnownLocation, fromAddr) ) {
+	            		Log.d(TAG, "Location not available, send back probe instead.");
+	            		GTalkHandler.sendProbe(fromAddr);	// If location isn't available, send back probe instead
+	            	}
 	            	return;
 	            }
 	            if ( GTalkHandler.processGPX(packet) )
@@ -251,6 +249,8 @@ public class GTalkService extends Service implements LocationListener {
 	}
 	
 	public void addToChatsList(String contact) {
+		if ( contact == null || contact.equals("") )
+			return;
 		if ( !chatsList.contains(contact) )
 			chatsList.add(contact);
 		if ( !messagesList.containsKey(contact) ) 
@@ -267,6 +267,9 @@ public class GTalkService extends Service implements LocationListener {
 	
 	// Retrieve Messages from Messages List
 	public ArrayList<String> getMessages(String contact) {
+		if ( contact == null || contact.equals("") )
+			return null;
+		
 		addToChatsList(contact);
 		return messagesList.get(contact);
 	}
@@ -328,8 +331,9 @@ public class GTalkService extends Service implements LocationListener {
 	public void onLocationChanged(Location location) {
 		Log.d(TAG, "onLocationChanged");
 		this.lastKnownLocation = location;
-		notifyLocation(location);
-		sendNewLocation(location, null); // Broadcast
+		notifyLocation();
+		
+		GTalkHandler.sendNewLocation(location, null); // Broadcast
 	}
 
 	@Override
@@ -347,51 +351,18 @@ public class GTalkService extends Service implements LocationListener {
 		// No nothing
 	}
 	
-	// sendNewLocation: 
-	// loc: new location
-	// to: bare address or null for broadcasting
-	@SuppressLint("SimpleDateFormat")
-	public void sendNewLocation(Location loc, String to) {
-		if ( loc == null )
-			return;
-		
-		if ( connection != null && connection.isAuthenticated() ) {
-			Log.d(TAG, "Broadcasting new location...");
-			
-			// Build GPX Message:
-			DecimalFormat dForm = new DecimalFormat("###.######");
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-			String message = "<trkpt lat=\""+dForm.format(loc.getLatitude())+"\" lon=\""+dForm.format(loc.getLongitude())+"\">";
-			message += "<ele>"+loc.getAltitude()+"</ele>";
-			message += "<time>"+sdf.format(new Date(loc.getTime()))+"</time></trkpt>";
-			
-			Message msg = new Message("", Message.Type.chat);
-			msg.setBody(message);
-			
-			ArrayList<BuddyEntry> buddies = new ArrayList<BuddyEntry>();
-			
-			if ( to == null ) {
-				// Broadcast
-				buddies = BuddyHandler.getMyCityBuddies();
-			} else {
-				buddies.add( new BuddyEntry("", to, null) );
-			}
-			
-			for (BuddyEntry buddy : buddies) {
-				Log.d(TAG, "New Location sent to: "+buddy.getUser());
-				msg.setTo( buddy.getUser() );
-				sendPacket(msg);
-			}
-		}
-	}
-	
 	
 	public Location getLastKnownLocation() {
 	    Location location = locationManager.getLastKnownLocation(this.getBestProvider());
 		if ( location == null )
 			return this.lastKnownLocation;
 		
+		Location oldLocation = this.lastKnownLocation;
 		this.lastKnownLocation = location;
+		
+		if ( oldLocation == location )
+			onLocationChanged(location);
+		
 		return location;
 	}
 	
@@ -455,11 +426,10 @@ public class GTalkService extends Service implements LocationListener {
     	}
 	}
 	
-	private void notifyLocation(Location location) {
+	private void notifyLocation() {
 		android.os.Message msg = new android.os.Message();
 		Bundle b = new Bundle();
     	b.putInt("type", GTalkService.HANDLER_MSG_LOCATION_UPD);
-    	b.putParcelable("location", location);
     	msg.setData(b);
     	
     	Log.d(TAG, "notifyLocation");

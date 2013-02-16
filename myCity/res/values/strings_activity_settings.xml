@@ -16,9 +16,10 @@
         
     <string name="pref_title_min_update_interval">GPS Update Interval</string>
     <string name="pref_description_min_update_interval">Set lower (longer time) to preserve battery life and bandwidth</string>
-    <string name="pref_default_min_update_interval">300</string>
+    <string name="pref_default_min_update_interval">1</string>
     
     <string-array name="pref_min_update_interval_titles">
+        <item>1 second</item>
         <item>5 seconds</item>
         <item>10 seconds</item>
         <item>30 seconds</item>
@@ -29,6 +30,7 @@
         <item>GPS Disabled</item>
     </string-array>
     <string-array name="pref_min_update_interval_values">
+        <item>1</item>
         <item>5</item>
         <item>10</item>
         <item>30</item>

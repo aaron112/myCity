@@ -26,7 +26,7 @@ public class ChatActivity extends Activity implements ChatClient {
 	private ArrayList<String> messages = new ArrayList<String>();
 	private ArrayList<String> chats = new ArrayList<String>();
 	
-	private String contact;	// Current Contact for this CharActivity
+	private String contact = null;	// Current Contact for this CharActivity
 
 	private Spinner chating_with;
 	private EditText textMessage;
@@ -38,9 +38,14 @@ public class ChatActivity extends Activity implements ChatClient {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
-    
+	    Log.d(TAG, "onCreate");
+		
 		Bundle b = getIntent().getExtras();
-		contact = b.getString("contact");
+		String incomingContact = b.getString("contact");
+		if ( incomingContact != null && !incomingContact.equals("") ) {
+			Log.d(TAG, "Using incoming Contact instead.");
+			contact = incomingContact;
+		}
     
 		chating_with = (Spinner) this.findViewById(R.id.chating_with);
 		textMessage = (EditText) this.findViewById(R.id.chatET);
@@ -70,7 +75,7 @@ public class ChatActivity extends Activity implements ChatClient {
 				Log.i(TAG, "Sending text " + text + " to " + contact);
         
 				if ( GTalkHandler.sendMessage(contact, text, GTalkHandler.SENDMSG_NORMAL) ) {
-					updateMsgList();
+					buildMsgList();
 				} else {
 					runOnUiThread(new Runnable() {
 						public void run() {
@@ -81,13 +86,23 @@ public class ChatActivity extends Activity implements ChatClient {
 			}
 		});
 		
-		if (contact.equals(""))
+		if ( contact == null ) {
+			Log.d(TAG, "getLastMsgFrom");
 			contact = GTalkHandler.getLastMsgFrom();
-		if (contact == null)
-			finish();
-	
-		updateMsgList();
-		updateChatList();
+			if ( contact == null ) {
+				buildChatList();
+				if ( chats.isEmpty() ) {
+					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
+					finish();
+				} else {
+					Log.d(TAG, "Falling back to the first conversation on list.");
+					contact = chats.get(0);	// Falling back to the first conversation on list.
+				}
+			}
+		}
+
+		buildMsgList();
+		buildChatList();
     
 		// Register with GTalkHandler to get updates
 		GTalkHandler.registerChatClient(this);
@@ -96,20 +111,22 @@ public class ChatActivity extends Activity implements ChatClient {
 	@Override
 	protected void onResume() {
 	    super.onResume();
+	    Log.d(TAG, "onResume");
 	    GTalkHandler.registerChatClient(this);
 	}
 	
 	@Override
 	protected void onPause() {
 	    super.onPause();
+	    Log.d(TAG, "onPause");
 	    GTalkHandler.removeChatClient(this);
 	}
 	
 	@Override
 	protected void onDestroy() {
-		super.onDestroy();
 	    GTalkHandler.removeChatClient(this);
-		//
+	    Log.d(TAG, "onDestroy");
+		super.onDestroy();
 	}
 	
 	@Override
@@ -127,13 +144,13 @@ public class ChatActivity extends Activity implements ChatClient {
 	    	
 	    case R.id.menu_closechat:
 	    	GTalkHandler.removeFromChatsList(contact);
-    		updateChatList();
+    		buildChatList();
     		
 	    	if ( chats.isEmpty() )
 	    		finish();
 	    	else {
 	    		contact = chats.get(0);
-	    		updateChatList();
+	    		buildChatList();
 	    	}
 	    	
 	    	return true;
@@ -152,29 +169,32 @@ public class ChatActivity extends Activity implements ChatClient {
 		Log.i(TAG, "onChatUpdate called");
 		
 		// Refresh chat list from GTalkHandler and GTalkService
-		updateChatList();
+		buildChatList();
 		if (from.equals(this.contact)) {
-			updateMsgList();
+			buildMsgList();
 		}
 	}
 	
-	private void updateMsgList() {
+	private void buildMsgList() {
+		Log.d(TAG, "updateMsgList: contact = " + contact);
 		messages = GTalkHandler.getMessages(contact);
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.listitem, messages);
 	    listview.setAdapter(adapter);
 	    listview.setStackFromBottom(true);
 	}
 	
-	private void updateChatList() {
+	private void buildChatList() {
 		chats = GTalkHandler.getChatsList();
 	    ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, chats);
 	    spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    chating_with.setAdapter(spinnerArrayAdapter);
+	    // Update selection
+	    chating_with.setSelection(chats.indexOf(contact), true);
 	}
 	
 	private void changeChat(String contact) {
 		this.contact = contact;
-		updateMsgList();
+		buildMsgList();
 	}
 
 }

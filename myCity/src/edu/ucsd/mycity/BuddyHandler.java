@@ -27,7 +27,7 @@ public class BuddyHandler {
 		
 		Collection<RosterEntry> entries = roster.getEntries();
         for (RosterEntry entry : entries) {
-        	String bareAddr = StringUtils.parseBareAddress(entry.getUser());
+        	String bareAddr = getBareAddr(entry.getUser());
         	String userName = entry.getName();
         	
         	if (userName == null)
@@ -40,8 +40,6 @@ public class BuddyHandler {
         	} else {
         		// New entry
         		buddies.put(bareAddr, new BuddyEntry( userName, bareAddr, roster.getPresence(entry.getUser()) ));
-        		// Try to probe user
-        		GTalkHandler.probeUser(bareAddr);
         	}
         }
 	}
@@ -51,14 +49,6 @@ public class BuddyHandler {
 		
 		if ( buddies.containsKey(bareAddr) ) {
 			buddies.get(bareAddr).setPresence(presence);
-		}
-	}
-	
-	public static void setIsMyCityUser(String bareAddr) {
-		if ( buddies.containsKey(bareAddr) ) {
-			Log.d(TAG, "Added myCity buddy: "+bareAddr);
-			
-			buddies.get(bareAddr).setMyCityUser(true);
 		}
 	}
 	
@@ -110,5 +100,15 @@ public class BuddyHandler {
 	
 	public static ArrayList<BuddyEntry> getBuddies() {
 		return new ArrayList<BuddyEntry>( buddies.values() );
+	}
+	
+	public static BuddyEntry getBuddy(String bareAddr) {
+		if ( buddies.containsKey(bareAddr) )
+			return buddies.get(bareAddr);
+		return null;
+	}
+	
+	public static String getBareAddr(String addr) {
+		return StringUtils.parseBareAddress(addr);
 	}
 }

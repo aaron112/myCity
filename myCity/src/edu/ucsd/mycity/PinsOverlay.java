@@ -3,17 +3,17 @@ package edu.ucsd.mycity;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.widget.Toast;
+import android.os.Bundle;
 
 import com.google.android.maps.MapView;
-import com.google.android.maps.OverlayItem;
 import com.readystatesoftware.mapviewballoons.BalloonItemizedOverlay;
 
-public class PinsOverlay extends BalloonItemizedOverlay<OverlayItem> {
+public class PinsOverlay extends BalloonItemizedOverlay<BuddyOverlayItem> {
 	
 	private Context mContext;
-	private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
+	private ArrayList<BuddyOverlayItem> overlays = new ArrayList<BuddyOverlayItem>();
 	
 	public PinsOverlay(Drawable defaultMarker, MapView mapView) {
 	    super(boundCenter(defaultMarker), mapView);
@@ -22,7 +22,7 @@ public class PinsOverlay extends BalloonItemizedOverlay<OverlayItem> {
 	}
 	
 	@Override
-	protected OverlayItem createItem(int i) {
+	protected BuddyOverlayItem createItem(int i) {
 	    // TODO Auto-generated method stub
 	    return overlays.get(i);
 	}
@@ -33,15 +33,25 @@ public class PinsOverlay extends BalloonItemizedOverlay<OverlayItem> {
 	    return overlays.size();
 	}
 	
-	public void addOverlay(OverlayItem overlay) {
+	public void addOverlay(BuddyOverlayItem overlay) {
 		overlays.add(overlay);
 	    populate();
 	}
 	
 	@Override
-	protected boolean onBalloonTap(int index, OverlayItem item) {
-	    Toast.makeText(mContext, "Overlay Item " + index + " tapped!",
-	            Toast.LENGTH_LONG).show();
+	protected boolean onBalloonTap(int index, BuddyOverlayItem item) {
+		if ( item.getBuddyEntry() == null )
+			return false;
+		
+	    // Start ChatActivity
+		Intent i = new Intent(mContext, ChatActivity.class);
+		Bundle bundle = new Bundle();
+
+		bundle.putString("contact", item.getBuddyEntry().getUser());
+		i.putExtras(bundle);
+
+		mContext.startActivity(i);
+		
 	    return true;
 	}
 	

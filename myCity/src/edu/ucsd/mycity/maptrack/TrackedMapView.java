@@ -34,7 +34,7 @@ public class TrackedMapView extends MapView
 		{
 			if (mChangeListener != null) mChangeListener.onMapViewChange(mThis, getMapCenter(), mLastCenterPosition, getZoomLevel(), mLastZoomLevel);
 			mLastCenterPosition = getMapCenter();
-			mLastZoomLevel = getZoomLevel();			
+			mLastZoomLevel = getZoomLevel();
 		}
 	};
 	

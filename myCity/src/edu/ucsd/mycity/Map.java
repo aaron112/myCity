@@ -23,8 +23,6 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
-import com.google.android.maps.OverlayItem;
-
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
@@ -105,7 +103,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
             	if (refreshBtnState == REFRESH_BTN_STATE_FOLLOWING) {
             		animateToCurrentLocation();
             	} else {
-            		mapView.postInvalidate();	// Force the overlays to redraw
+            		//mapView.postInvalidate();	// Force the overlays to redraw
             	}
             }
         });
@@ -168,7 +166,7 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	    	return true;
 	    
 	    case R.id.menu_forceupdate:
-	    	GTalkHandler.probeUser(null);
+	    	GTalkHandler.sendProbe(null);
     		Toast.makeText(this, "Force Update Invoked", Toast.LENGTH_LONG).show();
 	    	return true;
 	    	
@@ -202,14 +200,15 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 			GeoPoint oldCenter, int newZoom, int oldZoom) {
 		Log.d(TAG, "onMapViewChange!");
 		// Redraw pins
+		// TODO: fix crash bug
 		drawBuddyPositionOverlay();
 	}
 
 	@Override
-	public void onLocationUpdate(Location location) {
-		Log.d(TAG, "onLocationUpdate");
-		setCurrentLocation(location);
-		animateToCurrentLocation();
+	public void onLocationUpdate() {
+		updateLocation();
+		if (refreshBtnState == Map.REFRESH_BTN_STATE_FOLLOWING)
+			animateToCurrentLocation();
 	}
 	
 	@Override
@@ -249,38 +248,39 @@ public class Map extends MapActivity implements LocationClient, BuddyLocationCli
 	    List<Overlay> overlays = mapView.getOverlays();
 	    overlays.remove(currPosPin);
 	    
-	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
+	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer_myloc);
 	    currPosPin = new PinsOverlay(marker, mapView);
 	    if (currentPoint != null) {
-	        currPosPin.addOverlay (new OverlayItem(currentPoint, "Me", GTalkHandler.getUserBareAddr()) );
+	        currPosPin.addOverlay( new BuddyOverlayItem(currentPoint, "Me", GTalkHandler.getUserBareAddr(), null) );
 	        overlays.add(currPosPin);
 
-		    mapView.invalidate();
+		    mapView.postInvalidate();
 	    }
 	}
 	
 	public void drawBuddyPositionOverlay() {
-	    List<Overlay> overlays = mapView.getOverlays();
-	    overlays.remove(currBuddyPins);
-	    
-	    Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
-	    currBuddyPins = new PinsOverlay(marker, mapView);
-	    
-	    ArrayList<BuddyEntry> buddies = BuddyHandler.getBuddiesOnMap(mapView.getMapCenter(),
-	    															 mapView.getLatitudeSpan(),
-	    															 mapView.getLongitudeSpan());
-	    if ( !buddies.isEmpty() ) {
-	    	for (BuddyEntry buddy : buddies) {
-	    		if (buddy.getLocation() == null)
-	    			continue;
-	    		
-		    	currBuddyPins.addOverlay(new OverlayItem( toGeoPoint(buddy.getLocation()),
-		    							 buddy.getUser(), buddy.getPresence().toString() ));
-	    	}
-	        overlays.add(currBuddyPins);
-
-		    mapView.invalidate();
-	    }
+		ArrayList<BuddyEntry> buddies = BuddyHandler.getBuddiesOnMap(mapView.getMapCenter(),
+		    														 mapView.getLatitudeSpan(),
+		    														 mapView.getLongitudeSpan());
+		
+		if ( !buddies.isEmpty() ) {
+			List<Overlay> overlays = mapView.getOverlays();
+			overlays.remove(currBuddyPins);
+			
+			Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
+			currBuddyPins = new PinsOverlay(marker, mapView);
+			
+			for (BuddyEntry buddy : buddies) {
+				if (buddy.getLocation() == null)
+					continue;
+		    		
+				currBuddyPins.addOverlay(new BuddyOverlayItem( toGeoPoint(buddy.getLocation()),
+										 buddy.getUser(), buddy.getPresence().toString(), buddy ));
+			}
+			overlays.add(currBuddyPins);
+			
+			mapView.postInvalidate();
+		}
 	}
 	
 	

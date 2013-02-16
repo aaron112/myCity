@@ -2,9 +2,12 @@ package edu.ucsd.mycity;
 
 import java.util.ArrayList;
 
+import edu.ucsd.mycity.listeners.RosterClient;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,10 +15,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class BuddyList extends Activity
+public class BuddyList extends Activity implements RosterClient
 {
+	private final static String TAG = "BuddyList";
 
-	private ArrayList<String> buddyArray = new ArrayList<String>();
+	private ArrayList<String> listviewArray = new ArrayList<String>();
+	private ArrayList<BuddyEntry> roster;
 	private ListView listview;
 
 	@Override
@@ -23,23 +28,8 @@ public class BuddyList extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_buddy_list);
-
 		listview = (ListView) this.findViewById(R.id.listMessages);
-
-		final ArrayList<BuddyEntry> roster = BuddyHandler.getBuddies();
-
-		for (BuddyEntry entry : roster)
-		{
-			String msg;
-			if (entry.getPresence().isAvailable())
-				msg = "(online)";
-
-			else
-				msg = "(offline)";
-			buddyArray.add(entry.getName() + " " + msg);
-			setListAdapter();
-		}
-
+		
 		listview.setOnItemClickListener(new OnItemClickListener()
 		{
 
@@ -48,7 +38,7 @@ public class BuddyList extends Activity
 			{
 				String chatContact = roster.get(position).getUser();
 
-				Intent i = new Intent(BuddyList.this, ChatActivity.class);
+				Intent i = new Intent(getApplicationContext(), ChatActivity.class);
 				Bundle bundle = new Bundle();
 
 				bundle.putString("contact", chatContact);
@@ -58,8 +48,31 @@ public class BuddyList extends Activity
 			}
 
 		});
+		
+		buildList();
+		
+		// Register with GTalkHandler to get updates
+		GTalkHandler.registerRosterClient(this);
 	}
 
+	@Override
+	protected void onResume() {
+	    super.onResume();
+	    GTalkHandler.registerRosterClient(this);
+	}
+	
+	@Override
+	protected void onPause() {
+	    super.onPause();
+	    GTalkHandler.removeRosterClient(this);
+	}
+	
+	@Override
+	protected void onDestroy() {
+	    GTalkHandler.removeRosterClient(this);
+		super.onDestroy();
+	}
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
@@ -68,11 +81,36 @@ public class BuddyList extends Activity
 		return true;
 	}
 
-	private void setListAdapter()
+	@Override
+	public void onRosterUpdate() {
+		Log.d(TAG, "onRosterUpdate");
+		buildList();
+	}
+	
+	private void buildList()
 	{
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-		         R.layout.listbuddy, buddyArray);
+		roster = BuddyHandler.getBuddies();
+		listviewArray.clear();
+		for (BuddyEntry entry : roster)
+		{
+			String display;
+			
+			if (entry.getName() != entry.getUser())
+				display = entry.getName() + " (" + entry.getUser() + ")\n";
+			else
+				display = entry.getName() + "\n";
+			
+			if (entry.getPresence().isAvailable())
+				display += "(Online)";
+			else
+				display += "(Offline)";
+			
+			listviewArray.add(display);
+		}
+		
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.listbuddy, listviewArray);
 		listview.setAdapter(adapter);
 	}
+
 
 }

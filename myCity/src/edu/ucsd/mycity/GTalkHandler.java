@@ -1,7 +1,10 @@
 package edu.ucsd.mycity;
 
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
@@ -9,12 +12,13 @@ import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.util.StringUtils;
 
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.ChatClient;
 import edu.ucsd.mycity.listeners.LocationClient;
+import edu.ucsd.mycity.listeners.RosterClient;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -43,6 +47,7 @@ public class GTalkHandler {
 	private static Roster roster;
 	
 	private static ArrayList<ChatClient> chatClients = new ArrayList<ChatClient>();
+	private static ArrayList<RosterClient> rosterClients = new ArrayList<RosterClient>();
 	private static ArrayList<LocationClient> locationClients = new ArrayList<LocationClient>();
 	private static ArrayList<BuddyLocationClient> buddyLocationClients = new ArrayList<BuddyLocationClient>();
 	
@@ -61,8 +66,7 @@ public class GTalkHandler {
 				
 			case GTalkService.HANDLER_MSG_LOCATION_UPD:
 				Log.d(TAG, "handleMessage: received location_upd from service");
-				Location location = (Location)b.getParcelable("location");
-				notifyLocationClients( location );
+				notifyLocationClients();
 				break;
 			}
 			
@@ -106,6 +110,23 @@ public class GTalkHandler {
 		}
 	}
 
+	public static void registerRosterClient(RosterClient o) {
+		if ( !rosterClients.contains(o) )
+			rosterClients.add(o);
+	}
+	public static void removeRosterClient(RosterClient o) {
+		int i = rosterClients.indexOf(o);
+		if (i >= 0) {
+			rosterClients.remove(i);
+		}
+	}
+	public static void notifyRosterClients() {
+		for (int i = 0; i < rosterClients.size(); ++i) {
+			RosterClient rosterClient = (RosterClient)rosterClients.get(i);
+			rosterClient.onRosterUpdate();
+		}
+	}
+
 	public static void registerLocationClient(LocationClient o) {
 		if ( !locationClients.contains(o) )
 			locationClients.add(o);
@@ -116,10 +137,10 @@ public class GTalkHandler {
 			locationClients.remove(i);
 		}
 	}
-	public static void notifyLocationClients(Location location) {
+	public static void notifyLocationClients() {
 		for (int i = 0; i < locationClients.size(); ++i) {
 			LocationClient locationClient = (LocationClient)locationClients.get(i);
-			locationClient.onLocationUpdate(location);
+			locationClient.onLocationUpdate();
 		}
 	}
 
@@ -187,7 +208,7 @@ public class GTalkHandler {
 		
 		if ( mService.connect() ) {
 			mService.setConnection();
-			setRoaster();
+			setRoster();
 		}
 		
 		return true;
@@ -200,7 +221,7 @@ public class GTalkHandler {
 		mService.disconnect();
 	}
 	
-	public static void setRoaster() {
+	public static void setRoster() {
 		if ( isServiceStarted && mService.isAuthenticated() ) {
 			roster = mService.getRoster();
 			BuddyHandler.loadBuddiesFromRoster(roster);
@@ -209,17 +230,27 @@ public class GTalkHandler {
 			roster.addRosterListener(new RosterListener() {
 			    public void entriesDeleted(Collection<String> addresses) {
 			    	BuddyHandler.loadBuddiesFromRoster(roster);
+			    	notifyRosterClients();
 			    }
 			    public void entriesUpdated(Collection<String> addresses) {
 			    	BuddyHandler.loadBuddiesFromRoster(roster);
+			    	notifyRosterClients();
 			    }
 			    public void presenceChanged(Presence presence) {
 			    	Log.d(TAG, "Presence changed: " + presence.getFrom() + " " + presence);
-			    	BuddyHandler.updatePresense(StringUtils.parseBareAddress(presence.getFrom()), presence);
+			    	BuddyHandler.updatePresense(BuddyHandler.getBareAddr(presence.getFrom()), presence);
+			    	
+			    	if ( presence.isAvailable() ) {
+			    		BuddyEntry buddy = BuddyHandler.getBuddy( BuddyHandler.getBareAddr(presence.getFrom()) );
+			    		if ( !buddy.isProbed() )
+			    			sendProbe( buddy.getUser() );	// Try to probe user
+			    	}
+			    	notifyRosterClients();
 			    }
 				@Override
 				public void entriesAdded(Collection<String> arg0) {
 					BuddyHandler.loadBuddiesFromRoster(roster);
+			    	notifyRosterClients();
 				}
 			});
 		}
@@ -293,14 +324,14 @@ public class GTalkHandler {
 	
 	public static String getUserBareAddr() {
 		if ( isServiceStarted )
-			return StringUtils.parseBareAddress( mService.getConnection().getUser() );
+			return BuddyHandler.getBareAddr( mService.getConnection().getUser() );
 		return "";
 	}
 	
 	public static RosterEntry lookupUser(String bareAddr) {
 		Collection<RosterEntry> entries = mService.getRoster().getEntries();
         for (RosterEntry entry : entries) {
-        	if ( StringUtils.parseBareAddress( entry.getUser() ).equals(bareAddr) )
+        	if ( BuddyHandler.getBareAddr( entry.getUser() ).equals(bareAddr) )
         		return entry;
         }
         return null;
@@ -321,9 +352,8 @@ public class GTalkHandler {
 		String chatContent = message.getBody();
 		
 		if (chatContent.matches(PROBEMSG)) {
-			Log.d(TAG, "myCityProbe received from " + StringUtils.parseBareAddress(message.getFrom()));
-			
-			BuddyHandler.setIsMyCityUser( StringUtils.parseBareAddress(message.getFrom()) );
+			Log.d(TAG, "myCityProbe received from " + BuddyHandler.getBareAddr(message.getFrom()));
+			BuddyHandler.getBuddy( BuddyHandler.getBareAddr(message.getFrom()) ).setMyCityUser(true);
 			return true;
 		}
 		
@@ -339,9 +369,9 @@ public class GTalkHandler {
 		ArrayList<String> matchRes = GPXParser.parseGPX(chatContent);
 		
 		if (matchRes != null) {
-			Log.d(TAG, "matched GPX received from " + StringUtils.parseBareAddress(message.getFrom()));
-			String bareAddr =  StringUtils.parseBareAddress(message.getFrom());
-			BuddyHandler.setIsMyCityUser(bareAddr);
+			Log.d(TAG, "matched GPX received from " + BuddyHandler.getBareAddr(message.getFrom()));
+			String bareAddr =  BuddyHandler.getBareAddr(message.getFrom());
+			BuddyHandler.getBuddy( BuddyHandler.getBareAddr(message.getFrom()) ).setMyCityUser(true);
 			BuddyHandler.updateLocation( bareAddr, 
 										 Double.parseDouble(matchRes.get(0)),
 										 Double.parseDouble(matchRes.get(1)),
@@ -354,28 +384,72 @@ public class GTalkHandler {
 		return false;
 	}
 	
-	// to: null to probe all flagged users (Force Update)
-	public static void probeUser(String to) {
+	// bareAddr: null to probe all flagged users (Force Update)
+	public static void sendProbe(String bareAddr) {
 		if ( isServiceStarted && mService.isAuthenticated() ) {
 			ArrayList<BuddyEntry> buddies = new ArrayList<BuddyEntry>();
 			
 			Message msg = new Message("", Message.Type.chat);
 			msg.setBody(PROBEMSG);
 			
-			if ( to == null ) {
+			if ( bareAddr == null ) {
 				// Broadcast
 				Log.d(TAG, "Broadcasting PROBEMSG...");
 				buddies = BuddyHandler.getMyCityBuddies();
 			} else {
-				buddies.add( new BuddyEntry("", to, null) );
+				buddies.add( BuddyHandler.getBuddy(bareAddr) );
 			}
 			
 			for (BuddyEntry buddy : buddies) {
 				Log.d(TAG, "Probing: "+buddy.getUser());
+				buddy.setProbed(true);
 				msg.setTo( buddy.getUser() );
 				mService.sendPacket(msg);
 			}
 		}
+	}
+	
+	// sendNewLocation: 
+	// loc: new location
+	// to: bare address or null for broadcasting
+	// Return: turn if sent, false otherwise
+	@SuppressLint("SimpleDateFormat")
+	public static boolean sendNewLocation(Location loc, String bareAddr) {
+		if ( isServiceStarted && mService.isAuthenticated() ) {
+			Log.d(TAG, "Broadcasting new location...");
+			
+			// Build GPX Message:
+			DecimalFormat dForm = new DecimalFormat("###.######");
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+			String message = "<trkpt lat=\""+dForm.format(loc.getLatitude())+"\" lon=\""+dForm.format(loc.getLongitude())+"\">";
+			message += "<ele>"+loc.getAltitude()+"</ele>";
+			message += "<time>"+sdf.format(new Date(loc.getTime()))+"</time></trkpt>";
+			
+			Message msg = new Message("", Message.Type.chat);
+			msg.setBody(message);
+			
+			ArrayList<BuddyEntry> buddies = new ArrayList<BuddyEntry>();
+			
+			if ( bareAddr == null ) {
+				// Broadcast
+				buddies = BuddyHandler.getMyCityBuddies();
+			} else {
+				buddies.add( BuddyHandler.getBuddy(bareAddr) );
+			}
+			
+			if (buddies.size() == 0)
+				Log.d(TAG, "No my city buddy on list.");
+			
+			for (BuddyEntry buddy : buddies) {
+				Log.d(TAG, "New Location sent to: "+buddy.getUser());
+				msg.setTo( buddy.getUser() );
+				mService.sendPacket(msg);
+			}
+			
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public static Location getLastKnownLocation() {
