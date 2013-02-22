@@ -151,6 +151,13 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 	    GTalkHandler.removeLocationClient(this);
 	    GTalkHandler.removeConnectionClient(this);
 	    GTalkHandler.removeBuddyLocationClient(this);
+	    
+	    if ( loginMenuItemState == LOGIN_MENU_STATE_LOGGED_OUT ) {
+	    	// Stop the service
+	    	GTalkHandler.disconnect();
+	    	GTalkHandler.stopService();
+	    }
+	    
 		super.onDestroy();
 		//
 	}
@@ -205,12 +212,6 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 		    			GTalkConnect();
 	    	}
 	    	return true;
-	    
-	    case R.id.menu_quit:
-	    	// Shutdown service, shutdown app
-	    	GTalkHandler.disconnect();
-	    	GTalkHandler.stopService();
-	    	finish();
 	    	
 	    default:
 	    	return super.onOptionsItemSelected(item);

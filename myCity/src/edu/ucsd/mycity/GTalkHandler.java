@@ -340,6 +340,9 @@ public class GTalkHandler {
 	        if ( mode != GTalkHandler.SENDMSG_HIDDEN ) {
 	        	mService.addMessage(contact, getUserBareAddr() + ":");
 				mService.addMessage(contact, message);
+				// Check if recipient is unavailable
+				if ( !BuddyHandler.getBuddy(contact).getPresence().isAvailable() )
+					mService.addMessage(contact, "(The recipient is offline, message will be delivered when the user is online.)");
 	        }
 			return true;
 		}
