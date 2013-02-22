@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -80,7 +81,18 @@ public class BuddyList extends Activity implements RosterClient
 		getMenuInflater().inflate(R.menu.activity_buddy_list, menu);
 		return true;
 	}
-
+	
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+	    case R.id.menu_settings:
+	    	startActivity(new Intent(this, SettingsActivity.class));
+	    	return true;
+	    	
+	    default:
+	    	return super.onOptionsItemSelected(item);
+	    }
+	}
+	
 	@Override
 	public void onRosterUpdate() {
 		Log.d(TAG, "onRosterUpdate");

@@ -351,7 +351,7 @@ public class GTalkHandler {
 	}
 	
 	public static String getUserBareAddr() {
-		if ( isServiceStarted )
+		if ( isServiceStarted && mService.isAuthenticated() )
 			return BuddyHandler.getBareAddr( mService.getConnection().getUser() );
 		return "";
 	}

@@ -50,13 +50,16 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 	private PinsOverlay currBuddyPins = null;
 
 	private MenuItem loginMenuItem;
-	private int loginMenuItemState;
+	private int loginMenuItemState = LOGIN_MENU_STATE_LOGGED_OUT;
 	private Button refreshBtn;
 	private int refreshBtnState;
 	
 	
 	public void setLoginMenu(int setToState) {
 		loginMenuItemState = setToState;
+		
+		if ( loginMenuItem == null)
+			return;
 		
 		if (loginMenuItemState == LOGIN_MENU_STATE_LOGGED_OUT) {
 			loginMenuItem.setTitle(R.string.menu_login);
@@ -168,7 +171,7 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 		getMenuInflater().inflate(R.menu.activity_map, menu);
 
 		loginMenuItem = (MenuItem) menu.findItem(R.id.menu_login);
-		loginMenuItemState = LOGIN_MENU_STATE_LOGGED_OUT;
+		setLoginMenu(loginMenuItemState);
 		return true;
 	}
 	
