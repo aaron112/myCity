@@ -20,7 +20,6 @@ public class BuddyList extends Activity implements RosterClient
 {
 	private final static String TAG = "BuddyList";
 
-	//private ArrayList<String> listviewArray = new ArrayList<String>();
 	private ArrayAdapter<String> listviewAdapter = null;
 	private ArrayList<BuddyEntry> roster;
 	private ListView listview;
