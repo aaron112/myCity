@@ -57,7 +57,7 @@ public class GTalkService extends Service implements LocationListener {
 	private Location lastKnownLocation = null;
 	private long updateInterval = 0;
 	
-	// TODO: setup timer to force update at an interval
+	// TODO OPTIONAL: setup timer to force update at an interval
 	
 	private XMPPConnection connection = null;
 	private SharedPreferences prefs;

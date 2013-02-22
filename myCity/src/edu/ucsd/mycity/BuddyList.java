@@ -20,7 +20,8 @@ public class BuddyList extends Activity implements RosterClient
 {
 	private final static String TAG = "BuddyList";
 
-	private ArrayList<String> listviewArray = new ArrayList<String>();
+	//private ArrayList<String> listviewArray = new ArrayList<String>();
+	private ArrayAdapter<String> listviewAdapter = null;
 	private ArrayList<BuddyEntry> roster;
 	private ListView listview;
 
@@ -49,7 +50,9 @@ public class BuddyList extends Activity implements RosterClient
 			}
 
 		});
-		
+
+		listviewAdapter = new ArrayAdapter<String>(this, R.layout.listbuddy);
+		listview.setAdapter(listviewAdapter);
 		buildList();
 		
 		// Register with GTalkHandler to get updates
@@ -96,34 +99,38 @@ public class BuddyList extends Activity implements RosterClient
 	@Override
 	public void onRosterUpdate() {
 		Log.d(TAG, "onRosterUpdate");
-		buildList();
+
+		// runOnUiThread needed to change UI components
+		runOnUiThread(new Runnable() {
+		    public void run() {
+		    	buildList();
+		    }
+		});
 	}
 	
 	private void buildList()
 	{
 		roster = BuddyHandler.getBuddies();
-		listviewArray.clear();
-		// TODO: crashes when trying to rebuild list
+		listviewAdapter.clear();
 		
 		for (BuddyEntry entry : roster)
 		{
 			String display;
 			
-			if (entry.getName() != entry.getUser())
+			if ( !entry.getName().equals(entry.getUser()) )
 				display = entry.getName() + " (" + entry.getUser() + ")\n";
 			else
 				display = entry.getName() + "\n";
 			
-			if (entry.getPresence().isAvailable())
+			if ( entry.getPresence().isAvailable() )
 				display += "(Online)";
 			else
 				display += "(Offline)";
 			
-			listviewArray.add(display);
+			listviewAdapter.add(display);
 		}
 		
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.listbuddy, listviewArray);
-		listview.setAdapter(adapter);
+		listviewAdapter.notifyDataSetChanged();
 	}
 
 

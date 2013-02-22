@@ -48,10 +48,10 @@ public class ChatActivity extends Activity implements ChatClient {
 		Bundle b = getIntent().getExtras();
 		contact = b.getString("contact");
 		
-		if ( contact == null ) {
+		if ( contact == null || contact.equals("") ) {
 			Log.d(TAG, "getLastMsgFrom");
 			contact = GTalkHandler.getLastMsgFrom();
-			if ( contact == null ) {
+			if ( contact == null || contact.equals("") ) {
 				buildChatList();
 				if ( chats.isEmpty() ) {
 					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
@@ -165,10 +165,20 @@ public class ChatActivity extends Activity implements ChatClient {
 	public void onChatUpdate(String from) {
 		Log.i(TAG, "onChatUpdate called");
 		
-		// Refresh chat list from GTalkHandler and GTalkService
-		buildChatList();
+		// runOnUiThread needed to change UI components
+		runOnUiThread(new Runnable() {
+		    public void run() {
+		    	// Refresh chat list from GTalkHandler and GTalkService
+				buildChatList();
+		    }
+		});
+		
 		if (from.equals(this.contact)) {
-			buildMsgList();
+			runOnUiThread(new Runnable() {
+			    public void run() {
+			    	buildMsgList();
+			    }
+			});
 		}
 	}
 	

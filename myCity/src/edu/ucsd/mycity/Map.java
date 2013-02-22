@@ -227,7 +227,6 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 			GeoPoint oldCenter, int newZoom, int oldZoom) {
 		Log.d(TAG, "onMapViewChange!");
 		// Redraw pins
-		// TODO: fix crash bug
 		drawBuddyPositionOverlay();
 	}
 
