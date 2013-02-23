@@ -26,10 +26,11 @@ import com.google.android.maps.Overlay;
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
+import edu.ucsd.mycity.listeners.RosterClient;
 import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
 import edu.ucsd.mycity.maptrack.TrackedMapView;
 
-public class Map extends MapActivity implements LocationClient, ConnectionClient, BuddyLocationClient, OnMapViewChangeListener {
+public class Map extends MapActivity implements RosterClient, LocationClient, ConnectionClient, BuddyLocationClient, OnMapViewChangeListener {
 	// This is MainActivity
 	private final String TAG = "MainActivity";
 	public static final int REFRESH_BTN_STATE_TOGGLE = -1;
@@ -134,6 +135,7 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 	protected void onResume() {
 	    Log.i(TAG, "onResume");
 	    super.onResume();
+	    GTalkHandler.registerRosterClient(this);
 	    GTalkHandler.registerLocationClient(this);
 	    GTalkHandler.registerConnectionClient(this);
 	    GTalkHandler.registerBuddyLocationClient(this);
@@ -142,6 +144,7 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 	@Override
 	protected void onPause() {
 	    Log.i(TAG, "onResume");
+	    GTalkHandler.removeRosterClient(this);
 	    GTalkHandler.removeLocationClient(this);
 	    GTalkHandler.removeConnectionClient(this);
 	    GTalkHandler.removeBuddyLocationClient(this);
@@ -151,6 +154,7 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 	@Override
 	protected void onDestroy() {
 	    Log.i(TAG, "onDestroy");
+	    GTalkHandler.removeRosterClient(this);
 	    GTalkHandler.removeLocationClient(this);
 	    GTalkHandler.removeConnectionClient(this);
 	    GTalkHandler.removeBuddyLocationClient(this);
@@ -246,6 +250,14 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 		}
 	}
 	
+
+	@Override
+	public void onRosterUpdate() {
+		// Redraw pins
+		Log.d(TAG, "onRosterUpdate");
+		drawBuddyPositionOverlay();
+	}
+	
 	@Override
 	public void onBuddyLocationUpdate() {
 		// Redraw pins
@@ -314,7 +326,7 @@ public class Map extends MapActivity implements LocationClient, ConnectionClient
 			}
 			overlays.add(currBuddyPins);
 			
-			mapView.postInvalidate();
+			mapView.postInvalidate();	// Tell MapView to update itself
 		}
 	}
 	

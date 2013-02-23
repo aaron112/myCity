@@ -79,7 +79,9 @@ public class BuddyHandler {
 			
 			int lat = (int) (buddy.getLocation().getLatitude() * 1E6);
 			int lon = (int) (buddy.getLocation().getLongitude() * 1E6);
-			if ( buddy.isMyCityUser() && lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax ) {
+			// Show only available myCity users
+			if ( buddy.getPresence().isAvailable() && buddy.isMyCityUser() &&
+				 lat >= latMin && lat <= latMax && lon >= lonMin && lon <= lonMax ) {
 				res.add(buddy);
 			}
 		}
