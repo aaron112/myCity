@@ -10,11 +10,7 @@ import com.google.android.maps.MapView;
 
 public class TrackedMapView extends MapView
 {	
-	
-	// ------------------------------------------------------------------------
-	// MEMBERS
-	// ------------------------------------------------------------------------
-	
+
 	private TrackedMapView mThis;
 	private long mEventsTimeout = 250L; 	// Set this variable to your preferred timeout
 	private boolean mIsTouched = false;
@@ -22,10 +18,6 @@ public class TrackedMapView extends MapView
 	private int mLastZoomLevel;
 	//private Timer mChangeDelayTimer = new Timer();
 	private OnMapViewChangeListener mChangeListener = null;
-	
-	// ------------------------------------------------------------------------
-	// RUNNABLES
-	// ------------------------------------------------------------------------
 	
 	private Runnable mOnChangeTask = new Runnable()
 	{
@@ -37,10 +29,6 @@ public class TrackedMapView extends MapView
 			mLastZoomLevel = getZoomLevel();
 		}
 	};
-	
-	// ------------------------------------------------------------------------
-	// CONSTRUCTORS
-	// ------------------------------------------------------------------------
 	
 	public TrackedMapView(Context context, String apiKey)
 	{
@@ -67,18 +55,10 @@ public class TrackedMapView extends MapView
 		mLastZoomLevel = this.getZoomLevel();
 	}
 	
-	// ------------------------------------------------------------------------
-	// GETTERS / SETTERS
-	// ------------------------------------------------------------------------
-	
 	public void setOnChangeListener(OnMapViewChangeListener l)
 	{
 		mChangeListener = l;
 	}
-
-	// ------------------------------------------------------------------------
-	// EVENT HANDLERS
-	// ------------------------------------------------------------------------
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent ev)
@@ -102,20 +82,12 @@ public class TrackedMapView extends MapView
 			resetMapChangeTimer();
 		}
 	}
-
-	// ------------------------------------------------------------------------
-	// TIMER RESETS
-	// ------------------------------------------------------------------------
 	
 	private void resetMapChangeTimer()
 	{
 		TrackedMapView.this.removeCallbacks(mOnChangeTask);
 		TrackedMapView.this.postDelayed(mOnChangeTask, mEventsTimeout);
 	}
-	
-	// ------------------------------------------------------------------------
-	// CHANGE FUNCTIONS
-	// ------------------------------------------------------------------------
 	
 	private boolean isSpanChange()
 	{

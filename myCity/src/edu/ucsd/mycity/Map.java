@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * Map.java - MainActivity
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +46,6 @@ import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
 import edu.ucsd.mycity.maptrack.TrackedMapView;
 
 public class Map extends MapActivity implements RosterClient, LocationClient, ConnectionClient, BuddyLocationClient, OnMapViewChangeListener {
-	// This is MainActivity
 	private final String TAG = "MainActivity";
 	public static final int REFRESH_BTN_STATE_TOGGLE = -1;
 	public static final int REFRESH_BTN_STATE_BROWSING = 0;

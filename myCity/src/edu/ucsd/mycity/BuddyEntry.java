@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * BuddyEntry.java
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import org.jivesoftware.smack.packet.Presence;
 
 import android.location.Location;

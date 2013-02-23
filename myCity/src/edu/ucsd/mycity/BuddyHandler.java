@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * BuddyHandler.java - A singleton class to handle all buddy related operations
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

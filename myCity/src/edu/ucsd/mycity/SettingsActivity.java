@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * SettingsActivity.java - Settings Activity
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;

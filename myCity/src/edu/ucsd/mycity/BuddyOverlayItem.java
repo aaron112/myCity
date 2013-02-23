@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * BuddyOverlayItem.java - Customized overlay item for buddies
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.OverlayItem;
 

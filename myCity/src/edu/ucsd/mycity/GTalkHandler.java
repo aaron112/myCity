@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * GTalkHandler.java - a singleton class that handles all GTalk and GTalkService related operations
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import java.util.ArrayList;
 import java.util.Collection;
 import org.jivesoftware.smack.Roster;
@@ -27,11 +42,6 @@ import android.os.IBinder;
 import android.os.Messenger;
 import android.util.Log;
 
-/**
- * This works as an adapter between Activities and GTalkService
- * @author Aaron
- *
- */
 
 public class GTalkHandler {
 	public static final int SENDMSG_HIDDEN = 0;

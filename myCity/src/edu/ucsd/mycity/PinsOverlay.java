@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * PinsOverlay.java - Customized Overlay class for BuddyOverlayItem
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import java.util.ArrayList;
 
 import android.content.Context;

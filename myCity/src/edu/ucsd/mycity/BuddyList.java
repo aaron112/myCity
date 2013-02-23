@@ -1,5 +1,20 @@
 package edu.ucsd.mycity;
 
+/**
+ * BuddyList.java - BuddyList Activity
+ * 
+ * CSE110 Project - myCity
+ * 
+ * Team Members:
+ * Yip-Ming Wong (Aaron)
+ * Yui-Yan Chan (Ryan)
+ * Ryan Khalili
+ * Elliot Yaghoobia
+ * Jonas Kabigting
+ * Michael Lee
+ * 
+ */
+
 import java.util.ArrayList;
 
 import edu.ucsd.mycity.listeners.RosterClient;
