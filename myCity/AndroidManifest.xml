@@ -46,7 +46,10 @@
             android:name="edu.ucsd.mycity.SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
-        
+        <activity
+            android:name="edu.ucsd.mycity.AddUserContActivity"
+            android:label="@string/title_activity_add_user_cont" >
+        </activity>
         <service android:enabled="true" android:name="edu.ucsd.mycity.GTalkService" />
     </application>
 </manifest>
