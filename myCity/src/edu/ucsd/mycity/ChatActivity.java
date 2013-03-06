@@ -16,7 +16,9 @@ package edu.ucsd.mycity;
  */
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import edu.ucsd.mycity.ChatRoom.ChatMessage;
 import edu.ucsd.mycity.listeners.ChatClient;
 
 import android.app.Activity;
@@ -38,16 +40,20 @@ import android.widget.Toast;
 public class ChatActivity extends Activity implements ChatClient {
 	private final static String TAG = "ChatActivity";
 	
-	private ArrayList<String> messages = new ArrayList<String>();
-	private ArrayList<String> chats = new ArrayList<String>();
+	private ChatRoom mChatRoom;
+	private String mChatRoomName;
+	private ArrayList<String> chatRooms;	// Internal name of Chat rooms
+	private ArrayList<String> chatTitles;	// Display name of Chat rooms
 	
-	private String contact;	// Current Contact for this CharActivity
+	private ArrayList<String> messages = new ArrayList<String>();
+	private ArrayAdapter<String> msgListAdapter;
+	//private ArrayList<String> chats = new ArrayList<String>();
+	//private String contact;	// Current Contact for this CharActivity
 
 	private Spinner chating_with;
 	private EditText textMessage;
 	private ListView listview;
   
-
 	/** Called when the activity is first created. */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,34 +65,40 @@ public class ChatActivity extends Activity implements ChatClient {
 		textMessage = (EditText) this.findViewById(R.id.chatET);
 		listview = (ListView) this.findViewById(R.id.listMessages);
 		listview.setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+
+		msgListAdapter = new ArrayAdapter<String>(this, R.layout.listitem, messages);
+	    listview.setAdapter(msgListAdapter);
+	    listview.setStackFromBottom(true);
 		
 		Bundle b = getIntent().getExtras();
-		contact = b.getString("contact");
+		mChatRoomName = b.getString("contact");
 		
-		if ( contact == null || contact.equals("") ) {
+		if ( mChatRoomName == null || mChatRoomName.equals("") ) {
 			Log.d(TAG, "getLastMsgFrom");
-			contact = GTalkHandler.getLastMsgFrom();
-			if ( contact == null || contact.equals("") ) {
+			mChatRoomName = GTalkHandler.getLastMsgFrom();
+			
+			if ( mChatRoomName == null || mChatRoomName.equals("") ) {
 				buildChatList();
-				if ( chats.isEmpty() ) {
+				
+				if ( chatRooms.isEmpty() ) {
 					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
 					finish();
 				} else {
 					Log.d(TAG, "Falling back to the first conversation on list.");
-					contact = chats.get(0);	// Falling back to the first conversation on list.
+					mChatRoomName = chatRooms.get(0);	// Falling back to the first conversation on list.
 				}
 			}
 		}
 		
-		buildMsgList();
+		switchChatRoom(mChatRoomName);
 		buildChatList();
-		
 		
 		// Set a listener to switch chat "window"
 		chating_with.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-				changeChat( (String)parent.getSelectedItem() );
+				//switchChatRoom( (String)parent.getSelectedItem() );
+				switchChatRoom( chatRooms.get(pos) );
 			}
     	
 			@Override
@@ -102,9 +114,9 @@ public class ChatActivity extends Activity implements ChatClient {
 				String text = textMessage.getText().toString();
 				textMessage.setText(""); // Clear textfield
         
-				Log.i(TAG, "Sending text " + text + " to " + contact);
-        
-				if ( GTalkHandler.sendMessage(contact, text, GTalkHandler.SENDMSG_NORMAL) ) {
+				Log.i(TAG, "Sending text " + text + " to " + mChatRoomName);
+				
+				if ( mChatRoom.sendMessage(text) ) {
 					buildMsgList();
 				} else {
 					runOnUiThread(new Runnable() {
@@ -155,6 +167,8 @@ public class ChatActivity extends Activity implements ChatClient {
 	    	return true;
 	    	
 	    case R.id.menu_closechat:
+	    	// TODO: Later
+	    	/*
 	    	GTalkHandler.removeFromChatsList(contact);
     		buildChatList();
     		
@@ -164,6 +178,7 @@ public class ChatActivity extends Activity implements ChatClient {
 	    		contact = chats.get(0);
 	    		buildChatList();
 	    	}
+	    	*/
 	    	
 	    	return true;
 
@@ -188,7 +203,7 @@ public class ChatActivity extends Activity implements ChatClient {
 		    }
 		});
 		
-		if (from.equals(this.contact)) {
+		if (from.equals(this.mChatRoomName)) {
 			runOnUiThread(new Runnable() {
 			    public void run() {
 			    	buildMsgList();
@@ -196,26 +211,43 @@ public class ChatActivity extends Activity implements ChatClient {
 			});
 		}
 	}
-	
-	private void buildMsgList() {
-		Log.d(TAG, "updateMsgList: contact = " + contact);
-		messages = GTalkHandler.getMessages(contact);
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.listitem, messages);
-	    listview.setAdapter(adapter);
-	    listview.setStackFromBottom(true);
-	}
-	
+
 	private void buildChatList() {
-		chats = GTalkHandler.getChatsList();
-	    ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, chats);
+		chatRooms = new ArrayList<String>();
+		chatTitles = new ArrayList<String>();
+		HashMap<String, ChatRoom> chats = GTalkHandler.getChatsList();
+		for (HashMap.Entry<String, ChatRoom> entry : chats.entrySet()) {
+			chatRooms.add(entry.getKey());
+			chatTitles.add(entry.getValue().getTitle());
+		}
+		
+	    ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, chatTitles);
 	    spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    chating_with.setAdapter(spinnerArrayAdapter);
 	    // Update selection
-	    chating_with.setSelection(chats.indexOf(contact), true);
+	    chating_with.setSelection(chatTitles.indexOf( mChatRoom.getTitle() ), true);
 	}
 	
-	private void changeChat(String contact) {
-		this.contact = contact;
+	private void buildMsgList() {
+		Log.d(TAG, "updateMsgList: mChatRoomName = " + mChatRoomName);
+		messages.clear();
+		
+		Log.d(TAG, "DEBUG: mChatRoom = " + mChatRoom);
+		
+		for (ChatMessage chatmsg : mChatRoom.getMessages()) {
+			if ( chatmsg.getFrom() == null )
+				messages.add("You:");
+			else
+				messages.add(chatmsg.getFrom().getName() + ":");
+			messages.add(chatmsg.getMsg());
+		}
+		
+		msgListAdapter.notifyDataSetChanged();
+	}
+	
+	private void switchChatRoom(String chatRoomName) {
+		this.mChatRoomName = chatRoomName;
+		this.mChatRoom = GTalkHandler.getChatRoom(chatRoomName);
 		buildMsgList();
 	}
 

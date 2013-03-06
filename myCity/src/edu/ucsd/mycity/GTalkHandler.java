@@ -17,11 +17,12 @@ package edu.ucsd.mycity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
@@ -44,9 +45,6 @@ import android.util.Log;
 
 
 public class GTalkHandler {
-	public static final int SENDMSG_HIDDEN = 0;
-	public static final int SENDMSG_NORMAL = 1;
-	
 	private static final String TAG = "GTalkHandler";
 	private static final String PROBEMSG = "myCityProbe";
 	public static Context mContext;
@@ -320,40 +318,33 @@ public class GTalkHandler {
 		return null;
 	}
 	
-	public static void removeFromChatsList(String contact) {
+	public static int getChatsListSize() {
 		if ( isServiceStarted )
-			mService.removeFromChatsList(contact);
+			return mService.getChatsList().size();
+
+		return 0;
 	}
 	
-	public static ArrayList<String> getChatsList() {
+	public static ChatRoom getChatRoom(String chatRoomName) {
+		Log.d(TAG, "getChatRoom with "+ chatRoomName);
+		if ( isServiceStarted )
+			return mService.findChatRoom(chatRoomName);
+		
+		Log.d(TAG, "Service is not started.");
+		return null;
+	}
+	
+	public static HashMap<String, ChatRoom> getChatsList() {
 		if ( isServiceStarted )
 			return mService.getChatsList();
 
-		return new ArrayList<String>();
-	}
-	
-	public static ArrayList<String> getMessages(String contact) {
-		if ( isServiceStarted )
-			return mService.getMessages(contact);
-		
-		return new ArrayList<String>();
+		return null;
 	}
 	
 	// Return bool indicates if send is successful
-	public static boolean sendMessage(String contact, String message, int mode) {
+	public static boolean sendMessage(Message msg) {
 		if ( isServiceStarted && mService.isAuthenticated() ) {
-			Message msg = new Message(contact, Message.Type.chat);
-	        msg.setBody(message);
-	        
 	        mService.sendPacket(msg);
-	        
-	        if ( mode != GTalkHandler.SENDMSG_HIDDEN ) {
-	        	mService.addMessage(contact, getUserBareAddr() + ":");
-				mService.addMessage(contact, message);
-				// Check if recipient is unavailable
-				if ( !BuddyHandler.getBuddy(contact).getPresence().isAvailable() )
-					mService.addMessage(contact, "(The recipient is offline, message will be delivered when the user is online.)");
-	        }
 			return true;
 		}
 		
@@ -385,8 +376,7 @@ public class GTalkHandler {
 	
 	
 	// Returns true if matched.
-	public static boolean processProbe(Packet packet) {
-		Message message = (Message) packet;
+	public static boolean processProbe(Message message) {
 		String chatContent = message.getBody();
 		
 		if (chatContent.matches(PROBEMSG)) {
@@ -399,10 +389,9 @@ public class GTalkHandler {
 		
 		return false;
 	}
-
+	
 	// Returns true if matched.
-	public static boolean processGPX(Packet packet) {
-		Message message = (Message) packet;
+	public static boolean processGPX(Message message) {
 		String chatContent = message.getBody();
 		ArrayList<String> matchRes = GPX.parseGPX(chatContent);
 		

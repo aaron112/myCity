@@ -28,7 +28,7 @@ public class BuddyEntry {
 	private boolean isProbed = false;
 	private Location location = null;
 	
-	BuddyEntry(String name, String user, Presence presence) {
+	public BuddyEntry(String name, String user, Presence presence) {
 		this.name = name;
 		this.user = user;
 		this.presence = presence;

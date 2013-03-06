@@ -3,16 +3,23 @@ package edu.ucsd.mycity;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.jivesoftware.smack.AndroidConnectionConfiguration;
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.SmackAndroid;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.MessageTypeFilter;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -52,7 +59,8 @@ import android.widget.Toast;
  */
 
 
-public class GTalkService extends Service implements LocationListener {
+@SuppressWarnings("unused")
+public class GTalkService extends Service implements LocationListener, ChatManagerListener, MessageListener {
 	public static final int HANDLER_MSG_LOCATION_UPD = 1;
 	public static final int HANDLER_MSG_CHAT_UPD = 2;
 	public static final int HANDLER_MSG_CONNECTION_UPD = 3;
@@ -65,16 +73,14 @@ public class GTalkService extends Service implements LocationListener {
 	private LocationManager locationManager;
 	private Location lastKnownLocation = null;
 	private long updateInterval = 0;
-	
-	// TODO OPTIONAL: setup timer to force update at an interval
-	
-	private XMPPConnection connection = null;
+
 	private SharedPreferences prefs;
+	private XMPPConnection connection = null;
 	private OnSharedPreferenceChangeListener prefsListener;
+	private ChatManager chatManager;
 	
 	private String lastMsgFrom = null;
-	private ArrayList<String> chatsList = new ArrayList<String>();	// List of open chats
-	private HashMap<String, ArrayList<String>> messagesList = new HashMap<String, ArrayList<String>>();
+	private HashMap<String, ChatRoom> chatsList = new HashMap<String, ChatRoom>();
 	
 	private Messenger callbackMessenger;
 	
@@ -120,6 +126,9 @@ public class GTalkService extends Service implements LocationListener {
 			}
 		};
 		prefs.registerOnSharedPreferenceChangeListener(prefsListener);
+		
+		// As required by new version of aSmack
+		//SmackAndroid.init( getApplicationContext() );
 	}
 
 	@Override
@@ -171,8 +180,7 @@ public class GTalkService extends Service implements LocationListener {
 		String username = prefs.getString("gtalk_username", "");
 		String password = prefs.getString("gtalk_password", "");
 		
-		
-		ConnectionConfiguration connConfig = new ConnectionConfiguration(HOST, PORT, SERVICE);
+		AndroidConnectionConfiguration connConfig = new AndroidConnectionConfiguration(HOST, PORT, SERVICE);
 		connection = new XMPPConnection(connConfig);
 		Log.i(TAG, "Connecting to " + connection.getHost());
 		try {
@@ -241,13 +249,20 @@ public class GTalkService extends Service implements LocationListener {
 				}
 				
 			});
+
+			// Switching over to ChatManager
+			chatManager = connection.getChatManager();
+			chatManager.addChatListener(this);
+			// TODO: Accommodate multi user chat
 			
 			// Add a packet listener to get messages sent to us
+			/*
 			PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
 			connection.addPacketListener(new PacketListener() {
 				@Override
 				public void processPacket(Packet packet) {
 					Message message = (Message) packet;
+					
 					if (message.getBody() != null) {
 						String fromAddr = BuddyHandler.getBareAddr(message.getFrom());
 						Log.i(TAG, "Text Recieved " + message.getBody() + " from " +  fromAddr);
@@ -273,6 +288,7 @@ public class GTalkService extends Service implements LocationListener {
 					}
 				}
 			}, filter);
+			*/
 		}
 	}
 	
@@ -282,44 +298,6 @@ public class GTalkService extends Service implements LocationListener {
 	
 	public String getLastMsgFrom() {
 		return lastMsgFrom;
-	}
-	
-	public ArrayList<String> getChatsList() {
-		return chatsList;
-	}
-	
-	public void addToChatsList(String contact) {
-		if ( contact == null || contact.equals("") )
-			return;
-		if ( !chatsList.contains(contact) )
-			chatsList.add(contact);
-		if ( !messagesList.containsKey(contact) ) 
-			messagesList.put(contact, new ArrayList<String>());
-	}
-	
-	public void removeFromChatsList(String contact) {
-		if ( !chatsList.contains(contact) )
-			return;
-		
-		chatsList.remove(contact);
-		messagesList.remove(contact);
-	}
-	
-	// Retrieve Messages from Messages List
-	public ArrayList<String> getMessages(String contact) {
-		if ( contact == null || contact.equals("") )
-			return null;
-		
-		addToChatsList(contact);
-		return messagesList.get(contact);
-	}
-
-	// Add a Message to Messages List
-	public void addMessage(String contact, String message) {
-		Log.d(TAG, "addMessage: From: "+ contact + ", Msg: " + message);
-
-		addToChatsList(contact);
-		messagesList.get(contact).add(message);
 	}
 	
 	public void sendPacket(Packet pkg) {
@@ -462,7 +440,7 @@ public class GTalkService extends Service implements LocationListener {
     	b.putString("contact", from);
     	msg.setData(b);
 
-    	sendNotification(msg);
+    	sendNotificationMsg(msg);
 	}
 	
 	private void notifyLocation() {
@@ -473,7 +451,7 @@ public class GTalkService extends Service implements LocationListener {
     	
     	Log.d(TAG, "notifyLocation");
 
-    	sendNotification(msg);
+    	sendNotificationMsg(msg);
 	}
 	
 	private void notifyConnection() {
@@ -484,14 +462,124 @@ public class GTalkService extends Service implements LocationListener {
     	
     	Log.d(TAG, "notifyConnection");
     	
-    	sendNotification(msg);
+    	sendNotificationMsg(msg);
 	}
 	
-	private void sendNotification(android.os.Message msg) {
+	private void sendNotificationMsg(android.os.Message msg) {
 		try {
     		callbackMessenger.send(msg);
     	} catch (android.os.RemoteException e1) {
     		Log.w(getClass().getName(), "Exception sending callback message", e1);
     	}
+	}
+	
+	@Override
+	// ******* ChatManagerListener *******
+	// NOTE: For single-user chat only
+	public void chatCreated(Chat chat, boolean createdLocally) {
+		// Ignore if created locally, we only want remotely created chats
+		if ( createdLocally )
+			return;
+		
+		// See if already have a chatroom, if not, create it.
+		findChatRoom(chat);
+		
+		chat.addMessageListener(this);
+	}
+
+	@Override
+	// ******* MessageListener *******
+	// NOTE: For single-user chat only
+	public void processMessage(Chat chat, Message message) {
+		if (message.getBody() == null)
+			return;
+		
+		String fromAddr = BuddyHandler.getBareAddr(message.getFrom());
+		Log.d(TAG, "Text Recieved " + message.getBody() + " from " +  fromAddr);
+			
+		// Process incoming message for XML Location
+		if ( GTalkHandler.processProbe(message) ) {
+			// Return the favor
+			if ( !GTalkHandler.sendNewLocation(lastKnownLocation, fromAddr) ) {
+				Log.d(TAG, "Location not available, send back probe instead.");
+				GTalkHandler.sendProbe(fromAddr);	// If location isn't available, send back probe instead
+				// TODO: What if both devices are unavailable?
+			}
+			return;		// Stop if parsed to be probe message
+		}
+		
+		if ( GTalkHandler.processGPX(message) )
+			return;		// Stop if parsed to be GPX message
+		
+		Log.d(TAG, "Going on to add chat.");
+		
+		ChatRoom chatRoom = findChatRoom(chat);
+		lastMsgFrom = chatRoom.getParticipant().getUser();
+		chatRoom.addMessage(chatRoom.getParticipant(), message.getBody());
+		notifyChat(fromAddr);
+		makeChatNotification(fromAddr, message.getBody());
+	}
+	
+	/**
+	 * @pre	  chatroom not exist
+	 * @param fromAddr
+	 * @return newly created ChatRoom
+	 */
+	private ChatRoom createChatRoom(String bareAddr) {
+		// Single-user mode based on bareAddr
+		// Add chat first
+		Log.d(TAG, "createChatRoom");
+		return createChatRoom( chatManager.createChat(bareAddr, this) );
+	}
+	
+	private ChatRoom createChatRoom(Chat chat) {
+		// Single-user mode based on pre-created chat
+		String bareAddr = BuddyHandler.getBareAddr(chat.getParticipant());
+		ChatRoom newChatRoom = new ChatRoom(chat, BuddyHandler.getBuddy(bareAddr));
+		chatsList.put(bareAddr, newChatRoom);
+		return newChatRoom;
+	}
+	
+	private ChatRoom createChatRoom(MultiUserChat muc) {
+		// Multi-user mode based on pre-created muc
+		// TODO: set title
+		return chatsList.put(muc.getRoom(), new ChatRoom(muc, "TODO"));
+	}
+
+	/**
+	 * Finds a chat room with specified parameters
+	 * @param bareAddr
+	 * @return associated ChatRoom
+	 */
+	public ChatRoom findChatRoom(String bareAddr) {
+		if ( chatsList.containsKey(bareAddr) ) {
+			Log.d(TAG, "findChatRoom: existing chat found!");
+			
+			return chatsList.get(bareAddr);
+		}
+		
+		// if not found, call createChatRoom to create it.
+		return createChatRoom(bareAddr);
+	}
+	
+	public ChatRoom findChatRoom(Chat chat) {
+		// Single-user mode based on chat
+		String bareAddr = BuddyHandler.getBareAddr(chat.getParticipant());
+		if ( chatsList.containsKey(bareAddr) )
+			return chatsList.get(bareAddr);
+		
+		return createChatRoom(chat);
+	}
+	
+	public ChatRoom findChatRoom(MultiUserChat muc) {
+		// Multi-user mode based on muc
+		if ( chatsList.containsKey(muc.getRoom()) )
+			return chatsList.get(muc.getRoom());
+		
+		return createChatRoom(muc);
+	}
+	
+	public HashMap<String, ChatRoom> getChatsList() {
+		return chatsList;
 	}
 }

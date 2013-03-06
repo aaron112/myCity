@@ -196,7 +196,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient, Co
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 	    case R.id.menu_chat:
-	    	if ( !GTalkHandler.getChatsList().isEmpty() ) {
+	    	if ( GTalkHandler.getChatsListSize() > 0 ) {
 		    	Intent intent = new Intent(this, ChatActivity.class);
 		    	Bundle b = new Bundle();
 		    	b.putString("contact", "");
