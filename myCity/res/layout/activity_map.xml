@@ -12,10 +12,10 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:clickable="true"
-        android:apiKey="0-YTgCljzjMmOX3n5aDL4Tu5s4wYWPZikb6Bugg"/>
+        android:apiKey="0c-qLPk84XQv4V0jXMuv1qaWRTt83pLVIVdiuFg"/>
         
         <!-- apiKey for Aaron: 0-YTgCljzjMmOX3n5aDL4Tu5s4wYWPZikb6Bugg -->
-        <!-- Save yours here: -->
+        <!-- apiKey for Ryan: 0c-qLPk84XQv4V0jXMuv1qaWRTt83pLVIVdiuFg -->
 
         <Button
             android:id="@+id/updateLocation"
