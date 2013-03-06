@@ -49,5 +49,4 @@
         
         <service android:enabled="true" android:name="edu.ucsd.mycity.GTalkService" />
     </application>
-
 </manifest>
