@@ -42,6 +42,9 @@
     </string-array>
     
     
+    <string name="pref_header_notifications">Notifications</string>
+    <string name="pref_title_msg_notification">Message Notification</string>
+    <string name="pref_description_msg_notification">Notification sound on new message</string>
     <!--  Examples
 
     <string-array name="pref_example_list_titles">

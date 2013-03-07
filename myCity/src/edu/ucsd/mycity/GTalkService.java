@@ -33,6 +33,9 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -399,6 +402,10 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		        .setTicker("New message from "+bareAddr+"!")
 		        .setAutoCancel(true);
 		
+		// Make some noise!
+		String ringtoneUrl = prefs.getString("msg_notification", "");
+		if ( !ringtoneUrl.equals("") )
+			mBuilder.setSound(Uri.parse(ringtoneUrl));
 
 		// Creates an explicit intent for an Activity in your app
 		Intent resultIntent = new Intent(this, ChatActivity.class);
@@ -426,8 +433,9 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		// mId allows you to update the notification later on.
 		mNotificationManager.notify(1, mBuilder.build());
-
 	}
+	
+	
 	
 	/**
 	 * Private methods utilizing Messenger to notify clients
