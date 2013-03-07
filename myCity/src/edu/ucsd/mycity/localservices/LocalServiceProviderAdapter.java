@@ -13,11 +13,11 @@ import com.google.android.maps.GeoPoint;
  */
 public interface LocalServiceProviderAdapter {
 	/**
-	 * ***** Use BuddyHandler.getBuddiesOnMap as a reference ******
 	 * @param center
 	 * @param latSpan
 	 * @param lonSpan
 	 * @return
+	 * ***** Use BuddyHandler.getBuddiesOnMap as a reference ******
 	 */
 	ArrayList<LocalServiceItem> getLocalServices(GeoPoint center, int latSpan, int lonSpan);
 	
