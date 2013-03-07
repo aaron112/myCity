@@ -373,11 +373,12 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 		Drawable marker = getResources()
 		         .getDrawable(R.drawable.map_pointer_myloc);
-		currPosPin = new PinsOverlay(marker, mapView);
+		currPosPin = new BuddyPinsOverlay(marker, mapView);
 		if (currentPoint != null)
 		{
-			currPosPin.addOverlay(new BuddyOverlayItem(currentPoint, "Me",
-			         GTalkHandler.getUserBareAddr(), null));
+			currPosPin.addOverlay(
+					new BuddyOverlayItem(currentPoint, "Current Location",
+										 GTalkHandler.getUserBareAddr()));
 			overlays.add(currPosPin);
 
 			mapView.postInvalidate();
@@ -396,16 +397,15 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 			overlays.remove(currBuddyPins);
 
 			Drawable marker = getResources().getDrawable(R.drawable.map_pointer);
-			currBuddyPins = new PinsOverlay(marker, mapView);
+			currBuddyPins = new BuddyPinsOverlay(marker, mapView);
 
 			for (BuddyEntry buddy : buddies)
 			{
 				if (buddy.getLocation() == null)
 					continue;
 
-				currBuddyPins.addOverlay(new BuddyOverlayItem(toGeoPoint(buddy
-				         .getLocation()), buddy.getUser(), buddy.getPresence()
-				         .toString(), buddy));
+				currBuddyPins.addOverlay(
+						new BuddyOverlayItem(toGeoPoint(buddy.getLocation()), buddy));
 			}
 			overlays.add(currBuddyPins);
 

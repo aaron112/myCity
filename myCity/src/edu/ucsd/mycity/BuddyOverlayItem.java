@@ -19,16 +19,19 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.OverlayItem;
 
 public class BuddyOverlayItem extends OverlayItem {
+	private BuddyEntry buddyEntry = null;
 	
-	BuddyEntry buddyEntry;
-	
-	public BuddyOverlayItem(GeoPoint arg0, String arg1, String arg2, BuddyEntry buddyEntry) {
-		super(arg0, arg1, arg2);
+	// ------- Change here to change this display text on bubble -----
+	public BuddyOverlayItem(GeoPoint gp, BuddyEntry buddyEntry) {
+		super(gp, buddyEntry.getName(), buddyEntry.getPresence().toString());
 		this.buddyEntry = buddyEntry;
 	}
 	
-	public BuddyEntry getBuddyEntry() {
-		return buddyEntry;
+	public BuddyOverlayItem(GeoPoint gp, String line1, String line2) {
+		super(gp, line1, line2);
 	}
-
+	
+	public BuddyEntry getBuddyEntry() {
+		return this.buddyEntry;
+	}
 }
