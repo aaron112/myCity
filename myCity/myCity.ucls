@@ -181,57 +181,71 @@
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </interface>  
-  <realization id="21">    
-    <end type="SOURCE" refId="11"/>    
-    <end type="TARGET" refId="16"/>  
-  </realization>  
-  <realization id="22">    
-    <end type="SOURCE" refId="12"/>    
-    <end type="TARGET" refId="15"/>  
-  </realization>  
+  <class id="21" language="java" name="edu.ucsd.mycity.AddUserContActivity" project="myCity" 
+    file="/myCity/src/edu/ucsd/mycity/AddUserContActivity.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="272" y="1829"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
+  <class id="22" language="java" name="edu.ucsd.mycity.BuddyPinsOverlay" project="myCity" 
+    file="/myCity/src/edu/ucsd/mycity/BuddyPinsOverlay.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="471" y="1568"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true"/>      
+      <operations public="true" package="true" protected="true" private="true"/>    
+    </display>  
+  </class>  
   <association id="23">    
-    <end type="SOURCE" refId="8" navigable="false">      
-      <attribute id="24" name="roster"/>      
-      <multiplicity id="25" minimum="0" maximum="2147483647"/>    
+    <end type="SOURCE" refId="13" navigable="false">      
+      <attribute id="24" name="mService"/>      
+      <multiplicity id="25" minimum="0" maximum="1"/>    
     </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
+    <end type="TARGET" refId="5" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="26">    
-    <end type="SOURCE" refId="6" navigable="false">      
-      <attribute id="27" name="overlays"/>      
-      <multiplicity id="28" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="1" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="29">    
-    <end type="SOURCE" refId="12"/>    
-    <end type="TARGET" refId="14"/>  
-  </realization>  
-  <nesting id="30">    
+  <nesting id="26">    
+    <end type="SOURCE" refId="10"/>    
+    <end type="TARGET" refId="9"/>  
+  </nesting>  
+  <nesting id="27">    
     <end type="SOURCE" refId="5"/>    
     <end type="TARGET" refId="3"/>  
   </nesting>  
-  <association id="31">    
-    <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="32" name="locationClients"/>      
-      <multiplicity id="33" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="18" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="34">    
+  <realization id="28">    
+    <end type="SOURCE" refId="11"/>    
+    <end type="TARGET" refId="16"/>  
+  </realization>  
+  <realization id="29">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="15"/>  
+  </realization>  
+  <association id="30">    
     <end type="SOURCE" refId="12" navigable="false">      
-      <attribute id="35" name="mapView"/>      
-      <multiplicity id="36" minimum="0" maximum="1"/>    
+      <attribute id="31" name="currBuddyPins"/>      
+      <multiplicity id="32" minimum="0" maximum="1"/>    
     </end>    
-    <end type="TARGET" refId="19" navigable="true"/>    
+    <end type="TARGET" refId="6" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
+  <association id="33">    
+    <end type="SOURCE" refId="13" navigable="false">      
+      <attribute id="34" name="rosterClients"/>      
+      <multiplicity id="35" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="17" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="36">    
+    <end type="SOURCE" refId="22"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
   <association id="37">    
-    <end type="SOURCE" refId="1" navigable="false">      
-      <attribute id="38" name="buddyEntry"/>      
+    <end type="SOURCE" refId="10" navigable="false">      
+      <attribute id="38" name="participant"/>      
       <multiplicity id="39" minimum="0" maximum="1"/>    
     </end>    
     <end type="TARGET" refId="2" navigable="true"/>    
@@ -246,130 +260,138 @@
     <display labels="true" multiplicity="true"/>  
   </association>  
   <association id="43">    
-    <end type="SOURCE" refId="10" navigable="false">      
-      <attribute id="44" name="participant"/>      
-      <multiplicity id="45" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="46">    
-    <end type="SOURCE" refId="12"/>    
-    <end type="TARGET" refId="18"/>  
-  </realization>  
-  <association id="47">    
-    <end type="SOURCE" refId="19" navigable="false">      
-      <attribute id="48" name="mChangeListener"/>      
-      <multiplicity id="49" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="20" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="50">    
     <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="51" name="connectionClients"/>      
-      <multiplicity id="52" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="15" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="53">    
-    <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="54" name="rosterClients"/>      
-      <multiplicity id="55" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="17" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="56">    
-    <bendpoint x="883" y="1447"/>    
-    <end type="SOURCE" refId="12" navigable="false">      
-      <attribute id="57" name="currPosPin"/>      
-      <multiplicity id="58" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="6" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <nesting id="59">    
-    <end type="SOURCE" refId="10"/>    
-    <end type="TARGET" refId="9"/>  
-  </nesting>  
-  <association id="60">    
-    <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="61" name="chatClients"/>      
-      <multiplicity id="62" minimum="0" maximum="2147483647"/>    
+      <attribute id="44" name="chatClients"/>      
+      <multiplicity id="45" minimum="0" maximum="2147483647"/>    
     </end>    
     <end type="TARGET" refId="16" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <realization id="63">    
-    <end type="SOURCE" refId="8"/>    
-    <end type="TARGET" refId="17"/>  
-  </realization>  
-  <association id="64">    
+  <association id="46">    
     <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="65" name="mService"/>      
-      <multiplicity id="66" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="5" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="67">    
-    <end type="SOURCE" refId="4" navigable="false">      
-      <attribute id="68" name="buddies"/>      
-      <multiplicity id="69" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="70">    
-    <end type="SOURCE" refId="12"/>    
-    <end type="TARGET" refId="20"/>  
-  </realization>  
-  <association id="71">    
-    <end type="SOURCE" refId="12" navigable="false">      
-      <attribute id="72" name="currBuddyPins"/>      
-      <multiplicity id="73" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="6" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="74">    
-    <end type="SOURCE" refId="10" navigable="false">      
-      <attribute id="75" name="participants"/>      
-      <multiplicity id="76" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="77">    
-    <end type="SOURCE" refId="10" navigable="false">      
-      <attribute id="78" name="messages"/>      
-      <multiplicity id="79" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="9" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="80">    
-    <end type="SOURCE" refId="12"/>    
-    <end type="TARGET" refId="17"/>  
-  </realization>  
-  <association id="81">    
-    <end type="SOURCE" refId="9" navigable="false">      
-      <attribute id="82" name="from"/>      
-      <multiplicity id="83" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="84">    
-    <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="85" name="buddyLocationClients"/>      
-      <multiplicity id="86" minimum="0" maximum="2147483647"/>    
+      <attribute id="47" name="buddyLocationClients"/>      
+      <multiplicity id="48" minimum="0" maximum="2147483647"/>    
     </end>    
     <end type="TARGET" refId="14" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
+  <association id="49">    
+    <end type="SOURCE" refId="6" navigable="false">      
+      <attribute id="50" name="overlays"/>      
+      <multiplicity id="51" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="1" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="52">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="14"/>  
+  </realization>  
+  <association id="53">    
+    <end type="SOURCE" refId="10" navigable="false">      
+      <attribute id="54" name="messages"/>      
+      <multiplicity id="55" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="9" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="56">    
+    <end type="SOURCE" refId="12" navigable="false">      
+      <attribute id="57" name="mapView"/>      
+      <multiplicity id="58" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="19" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="59">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="60" name="buddyEntry"/>      
+      <multiplicity id="61" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="62">    
+    <end type="SOURCE" refId="13" navigable="false">      
+      <attribute id="63" name="locationClients"/>      
+      <multiplicity id="64" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="18" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="65">    
+    <end type="SOURCE" refId="8" navigable="false">      
+      <attribute id="66" name="roster"/>      
+      <multiplicity id="67" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="68">    
+    <end type="SOURCE" refId="10" navigable="false">      
+      <attribute id="69" name="participants"/>      
+      <multiplicity id="70" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="71">    
+    <end type="SOURCE" refId="9" navigable="false">      
+      <attribute id="72" name="from"/>      
+      <multiplicity id="73" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="74">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="18"/>  
+  </realization>  
+  <realization id="75">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="17"/>  
+  </realization>  
+  <association id="76">    
+    <end type="SOURCE" refId="19" navigable="false">      
+      <attribute id="77" name="mChangeListener"/>      
+      <multiplicity id="78" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="20" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="79">    
+    <bendpoint x="883" y="1447"/>    
+    <end type="SOURCE" refId="12" navigable="false">      
+      <attribute id="80" name="currPosPin"/>      
+      <multiplicity id="81" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="6" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="82">    
+    <end type="SOURCE" refId="13" navigable="false">      
+      <attribute id="83" name="connectionClients"/>      
+      <multiplicity id="84" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="15" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="85">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="17"/>  
+  </realization>  
+  <association id="86">    
+    <end type="SOURCE" refId="4" navigable="false">      
+      <attribute id="87" name="buddies"/>      
+      <multiplicity id="88" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="89">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="20"/>  
+  </realization>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     accessors="true" visibility="true">    
     <attributes public="true" package="true" protected="true" private="true"/>    
