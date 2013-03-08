@@ -66,6 +66,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 	private PinsOverlay currPosPin = null;
 	private PinsOverlay currBuddyPins = null;
+	private PinsOverlay currUserContPins = null;
 
 	private MenuItem loginMenuItem;
 	private int loginMenuItemState = LOGIN_MENU_STATE_LOGGED_OUT;
@@ -188,6 +189,10 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 			         "Currently in Offline Mode (Auto login disabled)",
 			         Toast.LENGTH_LONG).show();
 		}
+
+		UserContHandler.updateContent();
+		// drawUserContOverlay();
+
 	}
 
 	@Override
@@ -242,51 +247,64 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		setLoginMenu(loginMenuItemState);
 		return true;
 	}
-	
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-	    case R.id.menu_chat:
-	    	if ( GTalkHandler.getChatsListSize() > 0 ) {
-		    	Intent intent = new Intent(this, ChatActivity.class);
-		    	Bundle b = new Bundle();
-		    	b.putString("contact", "");
-		    	intent.putExtras(b);
-		    	startActivity(intent);
-	    	} else {
-	    		Toast.makeText(this, "Start a new conversation from Map or Contact List", Toast.LENGTH_SHORT).show();
-	    	}
-	    	return true;
-	    	
-	    case R.id.menu_buddyList:
-	    	startActivity(new Intent(this, BuddyList.class));
-	    	return true;
-	    
-	    case R.id.menu_forceupdate:
-	    	GTalkHandler.sendProbe(null);
-    		Toast.makeText(this, "Force Update Invoked - Wait for Responses from other Clients", Toast.LENGTH_LONG).show();
-	    	return true;
-	    	
-	    case R.id.menu_settings:
-	    	startActivity(new Intent(this, SettingsActivity.class));
-	    	return true;
-	    	
-	    case R.id.menu_login:
-	    	if ( loginMenuItemState == LOGIN_MENU_STATE_LOGGED_IN ) {
-	    		// Proceed logout
-	    		GTalkHandler.disconnect();
-	    	} else {
-	    		// Proceed login
-	    		if ( GTalkHandler.isAuthenticated() )
-		    		Toast.makeText(this, "Error: Already Logged in!", Toast.LENGTH_LONG).show();
-		    	else
-		    		if ( checkConfig() )
-		    			GTalkConnect();
-	    	}
-	    	return true;
-	    	
-	    default:
-	    	return super.onOptionsItemSelected(item);
-	    }
+
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId())
+		{
+			case R.id.menu_chat:
+				if (GTalkHandler.getChatsListSize() > 0)
+				{
+					Intent intent = new Intent(this, ChatActivity.class);
+					Bundle b = new Bundle();
+					b.putString("contact", "");
+					intent.putExtras(b);
+					startActivity(intent);
+				}
+				else
+				{
+					Toast.makeText(this,
+					         "Start a new conversation from Map or Contact List",
+					         Toast.LENGTH_SHORT).show();
+				}
+				return true;
+
+			case R.id.menu_buddyList:
+				startActivity(new Intent(this, BuddyList.class));
+				return true;
+
+			case R.id.menu_forceupdate:
+				GTalkHandler.sendProbe(null);
+				Toast.makeText(
+				         this,
+				         "Force Update Invoked - Wait for Responses from other Clients",
+				         Toast.LENGTH_LONG).show();
+				return true;
+
+			case R.id.menu_settings:
+				startActivity(new Intent(this, SettingsActivity.class));
+				return true;
+
+			case R.id.menu_login:
+				if (loginMenuItemState == LOGIN_MENU_STATE_LOGGED_IN)
+				{
+					// Proceed logout
+					GTalkHandler.disconnect();
+				}
+				else
+				{
+					// Proceed login
+					if (GTalkHandler.isAuthenticated())
+						Toast.makeText(this, "Error: Already Logged in!",
+						         Toast.LENGTH_LONG).show();
+					else if (checkConfig())
+						GTalkConnect();
+				}
+				return true;
+
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@Override
@@ -296,6 +314,10 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		Log.d(TAG, "onMapViewChange!");
 		// Redraw pins
 		drawBuddyPositionOverlay();
+		drawUserContOverlay();
+
+		UserContHandler.updateContent();
+
 	}
 
 	@Override
@@ -376,13 +398,37 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		currPosPin = new BuddyPinsOverlay(marker, mapView);
 		if (currentPoint != null)
 		{
-			currPosPin.addOverlay(
-					new BuddyOverlayItem(currentPoint, "Current Location",
-										 GTalkHandler.getUserBareAddr()));
+			currPosPin.addOverlay(new BuddyOverlayItem(currentPoint,
+			         "Current Location", GTalkHandler.getUserBareAddr()));
 			overlays.add(currPosPin);
 
 			mapView.postInvalidate();
 		}
+	}
+
+	public boolean drawUserContOverlay()
+	{
+		ArrayList<UserContEntry> usercontents = UserContHandler.getContent();
+		if (usercontents == null || usercontents.isEmpty())
+		{
+			Log.d(TAG, "usercontents is null");
+			return false;
+		}
+
+		List<Overlay> overlays = mapView.getOverlays();
+		overlays.remove(currUserContPins);
+
+		Drawable marker = getResources().getDrawable(R.drawable.user_cont_pin);
+		currUserContPins = new UserContPinsOverlay(marker, mapView);
+
+		for (UserContEntry entry : usercontents)
+		{
+			currUserContPins.addOverlay(new UserContOverlayItem(entry));
+		}
+		overlays.add(currUserContPins);
+		mapView.postInvalidate();
+
+		return true;
 	}
 
 	public void drawBuddyPositionOverlay()
@@ -404,8 +450,8 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 				if (buddy.getLocation() == null)
 					continue;
 
-				currBuddyPins.addOverlay(
-						new BuddyOverlayItem(toGeoPoint(buddy.getLocation()), buddy));
+				currBuddyPins.addOverlay(new BuddyOverlayItem(toGeoPoint(buddy
+				         .getLocation()), buddy));
 			}
 			overlays.add(currBuddyPins);
 

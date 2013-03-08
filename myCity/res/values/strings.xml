@@ -17,6 +17,6 @@
     <string name="hint_type_to_compose">Type to compose</string>
     <string name="button_send">Send</string>
     <string name="hello_world">Hello world!</string>
-    <string name="title_activity_add_user_cont">AddUserContActivity</string>
+    <string name="title_activity_add_user_cont">Add a user content</string>
 
 </resources>
