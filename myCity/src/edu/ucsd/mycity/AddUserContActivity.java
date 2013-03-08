@@ -26,7 +26,6 @@ import android.widget.EditText;
 public class AddUserContActivity extends Activity
 {
 	public static final String TAG = "AddUserContActivity";
-	private static final String USER_CONT_URI = "http://mycity-110.appspot.com/product";
 
 	private Bundle extras;
 	private EditText place_box;
@@ -70,12 +69,14 @@ public class AddUserContActivity extends Activity
 			public void run()
 			{
 				HttpClient client = new DefaultHttpClient();
-				HttpPost post = new HttpPost(USER_CONT_URI);
+				HttpPost post = new HttpPost(UserContHandler.USER_CONT_URI);
 
 				try
 				{
 					List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(
 					         1);
+					nameValuePairs.add(new BasicNameValuePair("user", GTalkHandler
+					         .getUserBareAddr()));
 					nameValuePairs.add(new BasicNameValuePair("name", place_box
 					         .getText().toString()));
 					nameValuePairs.add(new BasicNameValuePair("description",
@@ -104,6 +105,7 @@ public class AddUserContActivity extends Activity
 					Log.d(TAG, "IOException while trying to conect to GAE");
 				}
 				dialog.dismiss();
+				finish();
 			}
 		};
 

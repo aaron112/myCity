@@ -20,29 +20,35 @@ import java.util.ArrayList;
 import android.graphics.drawable.Drawable;
 
 import com.google.android.maps.MapView;
+import com.google.android.maps.OverlayItem;
 import com.readystatesoftware.mapviewballoons.BalloonItemizedOverlay;
 
-public class PinsOverlay extends BalloonItemizedOverlay<BuddyOverlayItem> {
-	
-	private ArrayList<BuddyOverlayItem> overlays = new ArrayList<BuddyOverlayItem>();
-	
-	public PinsOverlay(Drawable defaultMarker, MapView mapView) {
-	    super(boundCenter(defaultMarker), mapView);
-	    boundCenter(defaultMarker);
+public class PinsOverlay extends BalloonItemizedOverlay<OverlayItem>
+{
+
+	private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
+
+	public PinsOverlay(Drawable defaultMarker, MapView mapView)
+	{
+		super(boundCenter(defaultMarker), mapView);
+		boundCenter(defaultMarker);
 	}
-	
+
 	@Override
-	protected BuddyOverlayItem createItem(int i) {
-	    return overlays.get(i);
+	protected OverlayItem createItem(int i)
+	{
+		return overlays.get(i);
 	}
-	
+
 	@Override
-	    public int size() {
-	    return overlays.size();
+	public int size()
+	{
+		return overlays.size();
 	}
-	
-	public void addOverlay(BuddyOverlayItem overlay) {
+
+	public void addOverlay(OverlayItem overlay)
+	{
 		overlays.add(overlay);
-	    populate();
+		populate();
 	}
 }

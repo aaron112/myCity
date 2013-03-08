@@ -7,22 +7,24 @@ import android.os.Bundle;
 
 import com.google.android.maps.MapView;
 
-public class BuddyPinsOverlay extends PinsOverlay {
+public class BuddyPinsOverlay extends PinsOverlay
+{
 
 	private Context mContext;
-	
-	public BuddyPinsOverlay(Drawable defaultMarker, MapView mapView) {
+
+	public BuddyPinsOverlay(Drawable defaultMarker, MapView mapView)
+	{
 		super(defaultMarker, mapView);
 	    mContext = mapView.getContext();
 	}
-	
-	@Override
+
 	// ------ Change this method to change it's onClick behavior --------
-	protected boolean onBalloonTap(int index, BuddyOverlayItem item) {
-		if ( item.getBuddyEntry() == null )
+	protected boolean onBalloonTap(int index, BuddyOverlayItem item)
+	{
+		if (item.getBuddyEntry() == null)
 			return false;
-		
-	    // Start ChatActivity
+
+		// Start ChatActivity
 		Intent i = new Intent(mContext, ChatActivity.class);
 		Bundle bundle = new Bundle();
 
@@ -30,7 +32,7 @@ public class BuddyPinsOverlay extends PinsOverlay {
 		i.putExtras(bundle);
 
 		mContext.startActivity(i);
-		
-	    return true;
+
+		return true;
 	}
 }
