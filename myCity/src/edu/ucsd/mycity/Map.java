@@ -47,7 +47,7 @@ import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
 import edu.ucsd.mycity.maptrack.TrackedMapView;
 
 public class Map extends MapActivity implements RosterClient, LocationClient,
-         ConnectionClient, BuddyLocationClient, OnMapViewChangeListener
+         ConnectionClient, BuddyLocationClient, OnMapViewChangeListener, View.OnClickListener
 {
 	private final String TAG = "MainActivity";
 	public static final int REFRESH_BTN_STATE_TOGGLE = -1;
@@ -165,18 +165,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		refreshBtnState = prefs.getInt("pref_refreshbutton_state",
 		         REFRESH_BTN_STATE_BROWSING);
 		toggleRefreshBtn(refreshBtnState);
-		refreshBtn.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				updateLocation();
-				toggleRefreshBtn(REFRESH_BTN_STATE_TOGGLE);
-
-				if (refreshBtnState == REFRESH_BTN_STATE_FOLLOWING)
-					animateToCurrentLocation();
-			}
-		});
+		refreshBtn.setOnClickListener(this);
 
 		if (prefs.getBoolean("gtalk_autologin", true) && checkConfig())
 		{
@@ -230,6 +219,15 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 		super.onDestroy();
 		//
+	}
+	
+	// On button click (Lock button)
+	public void onClick(View v) {
+		updateLocation();
+		toggleRefreshBtn(REFRESH_BTN_STATE_TOGGLE);
+		
+		if (refreshBtnState == REFRESH_BTN_STATE_FOLLOWING)
+			animateToCurrentLocation();
 	}
 
 	@Override
@@ -466,5 +464,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		return new GeoPoint((int) (l.getLatitude() * 1E6),
 		         (int) (l.getLongitude() * 1E6));
 	}
+	
+	
 
 }

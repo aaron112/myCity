@@ -257,41 +257,6 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 			chatManager = connection.getChatManager();
 			chatManager.addChatListener(this);
 			// TODO: Accommodate multi user chat
-			
-			// Add a packet listener to get messages sent to us
-			/*
-			PacketFilter filter = new MessageTypeFilter(Message.Type.chat);
-			connection.addPacketListener(new PacketListener() {
-				@Override
-				public void processPacket(Packet packet) {
-					Message message = (Message) packet;
-					
-					if (message.getBody() != null) {
-						String fromAddr = BuddyHandler.getBareAddr(message.getFrom());
-						Log.i(TAG, "Text Recieved " + message.getBody() + " from " +  fromAddr);
-						
-						// Process incoming message for XML Location
-						if ( GTalkHandler.processProbe(packet) ) {
-							// Return the favor
-							if ( !GTalkHandler.sendNewLocation(lastKnownLocation, fromAddr) ) {
-								Log.d(TAG, "Location not available, send back probe instead.");
-								GTalkHandler.sendProbe(fromAddr);	// If location isn't available, send back probe instead
-								// TODO: What if both devices are unavailable?
-							}
-							return;
-						}
-						if ( GTalkHandler.processGPX(packet) )
-							return;
-					
-						lastMsgFrom = fromAddr;
-						addMessage(fromAddr, GTalkHandler.getUserName(fromAddr) + ":");
-						addMessage(fromAddr, message.getBody());
-						notifyChat(fromAddr);
-						makeChatNotification(fromAddr, message.getBody());
-					}
-				}
-			}, filter);
-			*/
 		}
 	}
 	

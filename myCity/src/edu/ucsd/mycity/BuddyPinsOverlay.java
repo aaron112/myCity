@@ -14,7 +14,6 @@ public class BuddyPinsOverlay extends PinsOverlay {
 	public BuddyPinsOverlay(Drawable defaultMarker, MapView mapView) {
 		super(defaultMarker, mapView);
 	    mContext = mapView.getContext();
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override

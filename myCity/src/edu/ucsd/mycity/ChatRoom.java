@@ -19,6 +19,7 @@ import android.util.Log;
  * @author Aaron
  *
  */
+
 public class ChatRoom implements PacketListener, MessageListener {
 	
 	public class ChatMessage {

@@ -45,8 +45,8 @@ public class ChatActivity extends Activity implements ChatClient {
 	private ArrayList<String> chatRooms;	// Internal name of Chat rooms
 	private ArrayList<String> chatTitles;	// Display name of Chat rooms
 	
-	private ArrayList<String> messages = new ArrayList<String>();
-	private ArrayAdapter<String> msgListAdapter;
+	private ArrayList<ChatMessage> messages = new ArrayList<ChatMessage>();
+	private ChatMsgArrayAdapter msgListAdapter;
 	//private ArrayList<String> chats = new ArrayList<String>();
 	//private String contact;	// Current Contact for this CharActivity
 
@@ -66,9 +66,9 @@ public class ChatActivity extends Activity implements ChatClient {
 		listview = (ListView) this.findViewById(R.id.listMessages);
 		listview.setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
-		msgListAdapter = new ArrayAdapter<String>(this, R.layout.listitem, messages);
-	    listview.setAdapter(msgListAdapter);
-	    listview.setStackFromBottom(true);
+		//msgListAdapter = new ChatMsgArrayAdapter(this, R.layout.chatmsg_listitem, R.id.chattext, messages);
+	    //listview.setAdapter(msgListAdapter);
+	    //listview.setStackFromBottom(true);
 		
 		Bundle b = getIntent().getExtras();
 		mChatRoomName = b.getString("contact");
@@ -225,24 +225,17 @@ public class ChatActivity extends Activity implements ChatClient {
 	    spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    chating_with.setAdapter(spinnerArrayAdapter);
 	    // Update selection
-	    chating_with.setSelection(chatTitles.indexOf( mChatRoom.getTitle() ), true);
+	    chating_with.setSelection( chatTitles.indexOf( mChatRoom==null ? 0 : mChatRoom.getTitle() ), true);
 	}
 	
 	private void buildMsgList() {
 		Log.d(TAG, "updateMsgList: mChatRoomName = " + mChatRoomName);
-		messages.clear();
 		
-		Log.d(TAG, "DEBUG: mChatRoom = " + mChatRoom);
+		messages = mChatRoom.getMessages();
 		
-		for (ChatMessage chatmsg : mChatRoom.getMessages()) {
-			if ( chatmsg.getFrom() == null )
-				messages.add("You:");
-			else
-				messages.add(chatmsg.getFrom().getName() + ":");
-			messages.add(chatmsg.getMsg());
-		}
-		
-		msgListAdapter.notifyDataSetChanged();
+		msgListAdapter = new ChatMsgArrayAdapter(this, R.layout.chatmsg_listitem, R.id.chat_text, messages, false);
+	    listview.setAdapter(msgListAdapter);
+	    listview.setStackFromBottom(true);
 	}
 	
 	private void switchChatRoom(String chatRoomName) {
