@@ -115,7 +115,7 @@ public class AddUserContActivity extends Activity
 			String picturePath = cursor.getString(columnIndex);
 			cursor.close();
 
-			ImageView imageView = (ImageView) findViewById(R.id.imageView1);
+			ImageView imageView = (ImageView) findViewById(R.id.showImage);
 			imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
 
 			Log.d(TAG, picturePath);
@@ -146,7 +146,6 @@ public class AddUserContActivity extends Activity
 						HttpResponse urlResponse = httpClient.execute(httpGet);
 
 						String result = EntityUtils.toString(urlResponse.getEntity());
-
 						File file = new File(filepath);
 
 						FileBody fileBody = new FileBody(file, "multipart/form-data");

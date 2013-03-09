@@ -32,7 +32,7 @@
             android:singleLine="false" />
 
         <ImageView
-            android:id="@+id/imageView1"
+            android:id="@+id/showImage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.10" />
