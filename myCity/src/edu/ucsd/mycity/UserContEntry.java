@@ -8,15 +8,16 @@ public class UserContEntry
 	private String name;
 	private GeoPoint location;
 	private String description;
-	private String uid;
+	private String picKey;
 
 	public UserContEntry(String user, String name, String description,
-	         GeoPoint gp)
+	         GeoPoint gp, String picKey)
 	{
 		this.user = user;
 		this.name = name;
 		this.location = gp;
 		this.description = description;
+		this.picKey = picKey;
 	}
 
 	public String getName()
@@ -37,6 +38,11 @@ public class UserContEntry
 	public GeoPoint getLocation()
 	{
 		return this.location;
+	}
+
+	public String getPicKey()
+	{
+		return this.picKey;
 	}
 
 }

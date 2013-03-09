@@ -11,6 +11,7 @@ import com.google.android.maps.OverlayItem;
  */
 public class UserContOverlayItem extends OverlayItem
 {
+	private UserContEntry entry;
 
 	/**
 	 * @param arg0
@@ -20,7 +21,13 @@ public class UserContOverlayItem extends OverlayItem
 	public UserContOverlayItem(UserContEntry entry)
 	{
 		super(entry.getLocation(), entry.getName(), entry.getDescription());
+		this.entry = entry;
 		// TODO Auto-generated constructor stub
+	}
+
+	public UserContEntry getEntry()
+	{
+		return this.entry;
 	}
 
 }

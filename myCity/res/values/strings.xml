@@ -19,5 +19,7 @@
     <string name="button_send">Send</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_add_user_cont">Add a user content</string>
+    <string name="title_activity_load_user_cont">LoadUserContActivity</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

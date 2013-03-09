@@ -27,16 +27,27 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="Description"
-            android:singleLine="false"
             android:inputType="textMultiLine"
-            android:paddingBottom="50dp" />
+            android:paddingBottom="50dp"
+            android:singleLine="false" />
+
+        <ImageView
+            android:id="@+id/showImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.10" />
+
+        <Button
+            android:id="@+id/buttonLoadPicture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Load Picture" />
 
         <Button
             android:id="@+id/submit_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Submit" />
-
     </LinearLayout>
 
 </RelativeLayout>

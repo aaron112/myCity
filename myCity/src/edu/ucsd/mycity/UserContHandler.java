@@ -1,6 +1,10 @@
 package edu.ucsd.mycity;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 import org.apache.http.HttpEntity;
@@ -14,6 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
@@ -23,6 +29,8 @@ public class UserContHandler
 	private static String TAG = "UserContHandler";
 	private static ArrayList<UserContEntry> usercontent;
 	public static String USER_CONT_URI = "http://mycity-110.appspot.com/product";
+	public static String UPLOAD_URI = "http://mycity-110.appspot.com/geturl";
+	private static Bitmap pic;
 
 	public static void clear()
 	{
@@ -86,17 +94,26 @@ public class UserContHandler
 						for (int i = 0; i < array.length(); i++)
 						{
 							JSONObject obj = array.getJSONObject(i);
-							GeoPoint gp = new GeoPoint(Integer.parseInt(obj
-							         .getString("latitude")), Integer.parseInt(obj
-							         .getString("longitude")));
+							String user = obj.getString("user");
 
-							UserContEntry temp = new UserContEntry(
-							         obj.getString("user"), obj.getString("name"),
-							         obj.getString("description"), gp);
+							if (BuddyHandler.isBuddy(user)
+							         || GTalkHandler.getUserBareAddr().equals(user))
+							{
+								GeoPoint gp = new GeoPoint(Integer.parseInt(obj
+								         .getString("latitude")), Integer.parseInt(obj
+								         .getString("longitude")));
 
-							Log.d(TAG, "adding item: " + temp.getName());
+								UserContEntry temp = new UserContEntry(
+								         obj.getString("user"), obj.getString("name"),
+								         obj.getString("description"), gp,
+								         obj.getString("picKey"));
 
-							usercontent.add(temp);
+								Log.d(TAG, "adding item: " + temp.getName());
+
+								usercontent.add(temp);
+							}
+							else
+								continue;
 						}
 
 					}
@@ -124,5 +141,44 @@ public class UserContHandler
 		};
 
 		t.start();
+	}
+
+	public static Bitmap getImageFromWeb(final String imglink)
+	{
+		Thread t = new Thread()
+		{
+			public void run()
+			{
+				Bitmap bmpImage;
+
+				URL imgURL;
+				try
+				{
+					imgURL = new URL(imglink);
+
+					URLConnection conn = imgURL.openConnection();
+					conn.connect();
+
+					InputStream is = conn.getInputStream();
+					BufferedInputStream bis = new BufferedInputStream(is);
+
+					bmpImage = BitmapFactory.decodeStream(bis);
+					bis.close();
+					is.close();
+					pic = bmpImage;
+				}
+				catch (Exception e)
+				{
+					Log.d(TAG, e.toString());
+				}
+			}
+		};
+		t.start();
+		while (pic == null)
+		{
+			Log.d(TAG, "loading pic...");
+		}
+		return pic;
+
 	}
 }
