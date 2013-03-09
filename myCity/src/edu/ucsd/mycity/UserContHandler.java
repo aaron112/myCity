@@ -23,6 +23,7 @@ public class UserContHandler
 	private static String TAG = "UserContHandler";
 	private static ArrayList<UserContEntry> usercontent;
 	public static String USER_CONT_URI = "http://mycity-110.appspot.com/product";
+	public static String UPLOAD_URI = "http://mycity-110.appspot.com/geturl";
 
 	public static void clear()
 	{
@@ -86,17 +87,26 @@ public class UserContHandler
 						for (int i = 0; i < array.length(); i++)
 						{
 							JSONObject obj = array.getJSONObject(i);
-							GeoPoint gp = new GeoPoint(Integer.parseInt(obj
-							         .getString("latitude")), Integer.parseInt(obj
-							         .getString("longitude")));
+							String user = obj.getString("user");
 
-							UserContEntry temp = new UserContEntry(
-							         obj.getString("user"), obj.getString("name"),
-							         obj.getString("description"), gp);
+							if (BuddyHandler.isBuddy(user)
+							         || GTalkHandler.getUserBareAddr().equals(user))
+							{
+								GeoPoint gp = new GeoPoint(Integer.parseInt(obj
+								         .getString("latitude")), Integer.parseInt(obj
+								         .getString("longitude")));
 
-							Log.d(TAG, "adding item: " + temp.getName());
+								UserContEntry temp = new UserContEntry(
+								         obj.getString("user"), obj.getString("name"),
+								         obj.getString("description"), gp,
+								         obj.getString("picKey"));
 
-							usercontent.add(temp);
+								Log.d(TAG, "adding item: " + temp.getName());
+
+								usercontent.add(temp);
+							}
+							else
+								continue;
 						}
 
 					}
