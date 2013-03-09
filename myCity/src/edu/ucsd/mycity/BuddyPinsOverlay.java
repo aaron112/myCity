@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.google.android.maps.MapView;
 
@@ -21,6 +22,9 @@ public class BuddyPinsOverlay extends PinsOverlay
 	// ------ Change this method to change it's onClick behavior --------
 	protected boolean onBalloonTap(int index, BuddyOverlayItem item)
 	{
+		// TODO: Fix ballon tap
+		Log.d("BuddyPinsOverlay", "onBalloonTap");
+		
 		if (item.getBuddyEntry() == null)
 			return false;
 

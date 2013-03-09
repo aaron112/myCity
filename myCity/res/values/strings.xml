@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">My City</string>
+    <string name="menu_shout">Shout!!!</string>
     <string name="menu_buddyList">Contacts</string>
     <string name="menu_chat">Chats</string>
     <string name="menu_closechat">Close Conversation</string>

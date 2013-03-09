@@ -18,7 +18,10 @@ package edu.ucsd.mycity;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
+import android.app.DialogFragment;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
@@ -26,10 +29,14 @@ import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -136,13 +143,11 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 		mapView.setOnLongpressListener(new OnLongpressListener()
 		{
-			public void onLongpress(final MapView view,
-			         final GeoPoint longpressLocation)
-			{
-				runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
+			public void onLongpress(final MapView view, final GeoPoint longpressLocation) {
+				//runOnUiThread(new Runnable()
+				//{
+				//	public void run()
+				//	{
 						// Insert your longpress action here
 						Intent intent = new Intent(getApplicationContext(),
 						         AddUserContActivity.class);
@@ -151,8 +156,8 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 						b.putInt("longitude", longpressLocation.getLongitudeE6());
 						intent.putExtras(b);
 						startActivity(intent);
-					}
-				});
+				//	}
+				//});
 			}
 		});
 
@@ -246,62 +251,50 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		return true;
 	}
 
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		switch (item.getItemId())
-		{
-			case R.id.menu_chat:
-				if (GTalkHandler.getChatsListSize() > 0)
-				{
-					Intent intent = new Intent(this, ChatActivity.class);
-					Bundle b = new Bundle();
-					b.putString("contact", "");
-					intent.putExtras(b);
-					startActivity(intent);
-				}
-				else
-				{
-					Toast.makeText(this,
-					         "Start a new conversation from Map or Contact List",
-					         Toast.LENGTH_SHORT).show();
-				}
-				return true;
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_shout:
+			showShoutDialog();
+			return true;
 
-			case R.id.menu_buddyList:
-				startActivity(new Intent(this, BuddyList.class));
-				return true;
+		case R.id.menu_chat:
+			Intent intent = new Intent(this, ChatActivity.class);
+			Bundle b = new Bundle();
+			b.putString("contact", "");
+			intent.putExtras(b);
+			startActivity(intent);
+			return true;
+			
+		case R.id.menu_buddyList:
+			startActivity(new Intent(this, BuddyList.class));
+			return true;
 
-			case R.id.menu_forceupdate:
-				GTalkHandler.sendProbe(null);
-				Toast.makeText(
-				         this,
-				         "Force Update Invoked - Wait for Responses from other Clients",
-				         Toast.LENGTH_LONG).show();
-				return true;
+		case R.id.menu_forceupdate:
+			GTalkHandler.sendProbe(null);
+			Toast.makeText( this, "Force Update Invoked - Wait for Responses from other Clients",
+					Toast.LENGTH_LONG).show();
+			return true;
 
-			case R.id.menu_settings:
-				startActivity(new Intent(this, SettingsActivity.class));
-				return true;
+		case R.id.menu_settings:
+			startActivity(new Intent(this, SettingsActivity.class));
+			return true;
 
-			case R.id.menu_login:
-				if (loginMenuItemState == LOGIN_MENU_STATE_LOGGED_IN)
-				{
-					// Proceed logout
-					GTalkHandler.disconnect();
-				}
-				else
-				{
-					// Proceed login
-					if (GTalkHandler.isAuthenticated())
-						Toast.makeText(this, "Error: Already Logged in!",
-						         Toast.LENGTH_LONG).show();
-					else if (checkConfig())
-						GTalkConnect();
-				}
-				return true;
+		case R.id.menu_login:
+			if (loginMenuItemState == LOGIN_MENU_STATE_LOGGED_IN) {
+				// Proceed logout
+				GTalkHandler.disconnect();
+			} else {
+				// Proceed login
+				if (GTalkHandler.isAuthenticated())
+					Toast.makeText(this, "Error: Already Logged in!",
+					         Toast.LENGTH_LONG).show();
+				else if (checkConfig())
+					GTalkConnect();
+			}
+			return true;
 
-			default:
-				return super.onOptionsItemSelected(item);
+		default:
+			return super.onOptionsItemSelected(item);
 		}
 	}
 
@@ -487,11 +480,17 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		if (prefs.getString("gtalk_username", "").equals("")
 		         || prefs.getString("gtalk_password", "").equals(""))
 		{
-			// Directs user to Settings activity
-			Toast.makeText(this,
-			         "Please Specify Google Talk Username and Password",
-			         Toast.LENGTH_LONG).show();
-			startActivity(new Intent(this, SettingsActivity.class));
+			// Show a dialog to redirect to settings
+			AlertDialog.Builder builder = new AlertDialog.Builder( this );
+			builder.setTitle("Welcome to My City!");
+			builder.setMessage("This is your first time using this app. Please specify your username and password before continuing.");
+			builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+		        public void onClick(DialogInterface dialog, int whichButton) {
+					startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
+		        }
+			});
+			
+			AlertDialog dialog = builder.show();
 
 			return false;
 		}
@@ -512,5 +511,36 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	}
 	
 	
-
+	private void showShoutDialog() {
+		final EditText inputTextLayout = new EditText(this);
+        
+		AlertDialog.Builder builder = new AlertDialog.Builder( this );
+		builder.setTitle("Enter shout message: ");
+		builder.setView(inputTextLayout);
+		
+		builder.setPositiveButton("Shout!", new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int whichButton) {
+	        	// Check if any buddy in range
+	        	ArrayList<BuddyEntry> buddiesInRange = BuddyHandler.getBuddiesOnMap(mapView.getMapCenter(), mapView.getLatitudeSpan(), mapView.getLongitudeSpan());
+	        	if ( buddiesInRange.isEmpty() ) {
+	        		Toast.makeText(getApplicationContext(), "No buddies in range. Try again later!", Toast.LENGTH_LONG).show();
+	        		return;
+	        	}// else if ( buddiesInRange.size() == 1 ) {
+	        	//	Toast.makeText(getApplicationContext(), "Only one buddy in range. Not initialing shout.", Toast.LENGTH_LONG).show();
+	        	//	return;
+	        	//}
+	        	
+	        	// Make shout
+	        	if ( GTalkHandler.createMultiChatRoom(buddiesInRange, inputTextLayout.getText().toString().trim() ) ) {
+	        		Toast.makeText(getApplicationContext(), "Shout sent successfully!", Toast.LENGTH_LONG).show();
+	        		// TODO: Open chat activity after invitation
+	        	} else {
+	        		Toast.makeText(getApplicationContext(), "Error when shouting. Check your connection.", Toast.LENGTH_LONG).show();
+	        	}
+	        }
+		});
+		
+		builder.setNegativeButton("Cancel", null);
+		AlertDialog dialog = builder.show();
+	}
 }
