@@ -40,9 +40,13 @@ import android.widget.Toast;
 public class ChatActivity extends Activity implements ChatClient {
 	private final static String TAG = "ChatActivity";
 	
+	public final static int CHAT_MODE_SINGLE = 0;
+	public final static int CHAT_MODE_MULTI = 1;
+	
 	private ChatRoom mChatRoom;
-	private String mChatRoomName;
-	private ArrayList<String> chatRooms;	// Internal name of Chat rooms
+	private String mChatRoomID;
+	private HashMap<String, ChatRoom> chatRooms;
+	private ArrayList<String> chatIDs;
 	private ArrayList<String> chatTitles;	// Display name of Chat rooms
 	
 	private ArrayList<ChatMessage> messages = new ArrayList<ChatMessage>();
@@ -71,34 +75,52 @@ public class ChatActivity extends Activity implements ChatClient {
 	    //listview.setStackFromBottom(true);
 		
 		Bundle b = getIntent().getExtras();
-		mChatRoomName = b.getString("contact");
+		mChatRoomID = b.getString("contact");
+		int mode = b.getInt("chatmode", CHAT_MODE_SINGLE);
 		
-		if ( mChatRoomName == null || mChatRoomName.equals("") ) {
-			Log.d(TAG, "getLastMsgFrom");
-			mChatRoomName = GTalkHandler.getLastMsgFrom();
-			
-			if ( mChatRoomName == null || mChatRoomName.equals("") ) {
-				buildChatList();
+		buildChatList();
+		
+		if ( mode == CHAT_MODE_SINGLE ) {
+			// Single chat:
+			if ( mChatRoomID == null || mChatRoomID.equals("") ) {
+				Log.d(TAG, "getLastMsgFrom");
+				mChatRoomID = GTalkHandler.getLastMsgFrom();
 				
-				if ( chatRooms.isEmpty() ) {
-					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
-					finish();
-				} else {
-					Log.d(TAG, "Falling back to the first conversation on list.");
-					mChatRoomName = chatRooms.get(0);	// Falling back to the first conversation on list.
+				if ( mChatRoomID == null || mChatRoomID.equals("") ) {
+					if ( chatRooms.isEmpty() ) {
+						Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
+						Toast.makeText(this, "Start a new conversation from Map or Contact List",
+								Toast.LENGTH_SHORT).show();
+						finish();
+					} else {
+						Log.d(TAG, "Falling back to the first conversation on list.");
+						mChatRoomID = chatRooms.keySet().iterator().next();
+					}
 				}
 			}
-		}
-		
-		switchChatRoom(mChatRoomName);
+			
+
+			// If chat room does not exist, create it
+			if ( !chatRooms.containsKey(mChatRoomID) ) {
+				Log.d(TAG, "Chat room does not exist, asking GTalkHandler to create it.");
+				GTalkHandler.createChatRoom(mChatRoomID);
+			}
+		} else {
+			// TODO: start with multi chat
+			Log.d(TAG, "Starting with Multi user mode.");
+		}	
+
+		// Initial chat room switch done when spinner initialized
 		buildChatList();
+		//switchChatRoom(mChatRoomID);
+		//Log.d(TAG, "Initial chat room switch done.");
 		
 		// Set a listener to switch chat "window"
 		chating_with.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
 				//switchChatRoom( (String)parent.getSelectedItem() );
-				switchChatRoom( chatRooms.get(pos) );
+				switchChatRoom( chatIDs.get(pos) );
 			}
     	
 			@Override
@@ -114,7 +136,7 @@ public class ChatActivity extends Activity implements ChatClient {
 				String text = textMessage.getText().toString();
 				textMessage.setText(""); // Clear textfield
         
-				Log.i(TAG, "Sending text " + text + " to " + mChatRoomName);
+				Log.i(TAG, "Sending text " + text + " to " + mChatRoomID);
 				
 				if ( mChatRoom.sendMessage(text) ) {
 					buildMsgList();
@@ -167,7 +189,7 @@ public class ChatActivity extends Activity implements ChatClient {
 	    	return true;
 	    	
 	    case R.id.menu_closechat:
-	    	// TODO: Later
+	    	// TODO: Later: Close chat
 	    	/*
 	    	GTalkHandler.removeFromChatsList(contact);
     		buildChatList();
@@ -203,7 +225,7 @@ public class ChatActivity extends Activity implements ChatClient {
 		    }
 		});
 		
-		if (from.equals(this.mChatRoomName)) {
+		if (from.equals(this.mChatRoomID)) {
 			runOnUiThread(new Runnable() {
 			    public void run() {
 			    	buildMsgList();
@@ -213,11 +235,12 @@ public class ChatActivity extends Activity implements ChatClient {
 	}
 
 	private void buildChatList() {
-		chatRooms = new ArrayList<String>();
+		chatRooms = GTalkHandler.getChatsList();
+		chatIDs = new ArrayList<String>();	// Array of chat IDs NEEDED to match spinner options later
 		chatTitles = new ArrayList<String>();
-		HashMap<String, ChatRoom> chats = GTalkHandler.getChatsList();
-		for (HashMap.Entry<String, ChatRoom> entry : chats.entrySet()) {
-			chatRooms.add(entry.getKey());
+		
+		for (HashMap.Entry<String, ChatRoom> entry : chatRooms.entrySet()) {
+			chatIDs.add(entry.getKey());
 			chatTitles.add(entry.getValue().getTitle());
 		}
 		
@@ -225,22 +248,27 @@ public class ChatActivity extends Activity implements ChatClient {
 	    spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    chating_with.setAdapter(spinnerArrayAdapter);
 	    // Update selection
-	    chating_with.setSelection( chatTitles.indexOf( mChatRoom==null ? 0 : mChatRoom.getTitle() ), true);
+	    chating_with.setSelection( chatTitles.indexOf( mChatRoomID ), true);
 	}
 	
 	private void buildMsgList() {
-		Log.d(TAG, "updateMsgList: mChatRoomName = " + mChatRoomName);
+		Log.d(TAG, "updateMsgList: mChatRoomID = " + mChatRoomID);
+		
+		if (mChatRoom == null)
+			return;
 		
 		messages = mChatRoom.getMessages();
 		
-		msgListAdapter = new ChatMsgArrayAdapter(this, R.layout.chatmsg_listitem, R.id.chat_text, messages, false);
+		msgListAdapter = new ChatMsgArrayAdapter(this, R.layout.chatmsg_listitem, R.id.chat_text, messages, mChatRoom.isMultiUser());
 	    listview.setAdapter(msgListAdapter);
 	    listview.setStackFromBottom(true);
 	}
 	
-	private void switchChatRoom(String chatRoomName) {
-		this.mChatRoomName = chatRoomName;
-		this.mChatRoom = GTalkHandler.getChatRoom(chatRoomName);
+	private void switchChatRoom(String chatRoomID) {
+		Log.i(TAG, "switchChatRoom: " + chatRoomID);
+		
+		this.mChatRoomID = chatRoomID;
+		this.mChatRoom = chatRooms.get(chatRoomID);
 		buildMsgList();
 	}
 

@@ -18,11 +18,15 @@ package edu.ucsd.mycity;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -30,6 +34,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -56,6 +61,9 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	public static final int LOGIN_MENU_STATE_LOGGED_OUT = 0;
 	public static final int LOGIN_MENU_STATE_LOGGED_IN = 1;
 
+	private boolean isDrawing;	// to prevent concurrent draws
+	private boolean isDrawingUserContent;
+	
 	private SharedPreferences prefs;
 
 	private MapController mapController;
@@ -67,7 +75,9 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	private PinsOverlay currPosPin = null;
 	private PinsOverlay currBuddyPins = null;
 	private PinsOverlay currUserContPins = null;
-
+	
+	private LoadUserContentAsyncTask mLoadUserContentAsyncTask = null;
+	
 	private MenuItem loginMenuItem;
 	private int loginMenuItemState = LOGIN_MENU_STATE_LOGGED_OUT;
 	private Button refreshBtn;
@@ -122,6 +132,9 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	{
 		Log.i(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
+		
+		isDrawing = false;
+		isDrawingUserContent = false;
 
 		prefs = PreferenceManager
 		         .getDefaultSharedPreferences(getApplicationContext());
@@ -136,13 +149,11 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 		mapView.setOnLongpressListener(new OnLongpressListener()
 		{
-			public void onLongpress(final MapView view,
-			         final GeoPoint longpressLocation)
-			{
-				runOnUiThread(new Runnable()
-				{
-					public void run()
-					{
+			public void onLongpress(final MapView view, final GeoPoint longpressLocation) {
+				//runOnUiThread(new Runnable()
+				//{
+				//	public void run()
+				//	{
 						// Insert your longpress action here
 						Intent intent = new Intent(getApplicationContext(),
 						         AddUserContActivity.class);
@@ -151,8 +162,8 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 						b.putInt("longitude", longpressLocation.getLongitudeE6());
 						intent.putExtras(b);
 						startActivity(intent);
-					}
-				});
+				//	}
+				//});
 			}
 		});
 
@@ -178,10 +189,8 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 			         "Currently in Offline Mode (Auto login disabled)",
 			         Toast.LENGTH_LONG).show();
 		}
-
-		UserContHandler.updateContent();
-		// drawUserContOverlay();
-
+		
+		updateUserContent();
 	}
 
 	@Override
@@ -246,62 +255,50 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		return true;
 	}
 
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		switch (item.getItemId())
-		{
-			case R.id.menu_chat:
-				if (GTalkHandler.getChatsListSize() > 0)
-				{
-					Intent intent = new Intent(this, ChatActivity.class);
-					Bundle b = new Bundle();
-					b.putString("contact", "");
-					intent.putExtras(b);
-					startActivity(intent);
-				}
-				else
-				{
-					Toast.makeText(this,
-					         "Start a new conversation from Map or Contact List",
-					         Toast.LENGTH_SHORT).show();
-				}
-				return true;
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_shout:
+			showShoutDialog();
+			return true;
 
-			case R.id.menu_buddyList:
-				startActivity(new Intent(this, BuddyList.class));
-				return true;
+		case R.id.menu_chat:
+			Intent intent = new Intent(this, ChatActivity.class);
+			Bundle b = new Bundle();
+			b.putString("contact", "");
+			intent.putExtras(b);
+			startActivity(intent);
+			return true;
+			
+		case R.id.menu_buddyList:
+			startActivity(new Intent(this, BuddyList.class));
+			return true;
 
-			case R.id.menu_forceupdate:
-				GTalkHandler.sendProbe(null);
-				Toast.makeText(
-				         this,
-				         "Force Update Invoked - Wait for Responses from other Clients",
-				         Toast.LENGTH_LONG).show();
-				return true;
+		case R.id.menu_forceupdate:
+			GTalkHandler.sendProbe(null);
+			Toast.makeText( this, "Force Update Invoked - Wait for Responses from other Clients",
+					Toast.LENGTH_LONG).show();
+			return true;
 
-			case R.id.menu_settings:
-				startActivity(new Intent(this, SettingsActivity.class));
-				return true;
+		case R.id.menu_settings:
+			startActivity(new Intent(this, SettingsActivity.class));
+			return true;
 
-			case R.id.menu_login:
-				if (loginMenuItemState == LOGIN_MENU_STATE_LOGGED_IN)
-				{
-					// Proceed logout
-					GTalkHandler.disconnect();
-				}
-				else
-				{
-					// Proceed login
-					if (GTalkHandler.isAuthenticated())
-						Toast.makeText(this, "Error: Already Logged in!",
-						         Toast.LENGTH_LONG).show();
-					else if (checkConfig())
-						GTalkConnect();
-				}
-				return true;
+		case R.id.menu_login:
+			if (loginMenuItemState == LOGIN_MENU_STATE_LOGGED_IN) {
+				// Proceed logout
+				GTalkHandler.disconnect();
+			} else {
+				// Proceed login
+				if (GTalkHandler.isAuthenticated())
+					Toast.makeText(this, "Error: Already Logged in!",
+					         Toast.LENGTH_LONG).show();
+				else if (checkConfig())
+					GTalkConnect();
+			}
+			return true;
 
-			default:
-				return super.onOptionsItemSelected(item);
+		default:
+			return super.onOptionsItemSelected(item);
 		}
 	}
 
@@ -312,10 +309,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		Log.d(TAG, "onMapViewChange!");
 		// Redraw pins
 		drawBuddyPositionOverlay();
-		drawUserContOverlay();
-
-		UserContHandler.updateContent();
-
+		updateUserContent();
 	}
 
 	@Override
@@ -388,6 +382,10 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 	public void drawCurrPositionOverlay()
 	{
+		//if ( isDrawing )
+		//	return;
+		
+		//isDrawing = true;
 		List<Overlay> overlays = mapView.getOverlays();
 		overlays.remove(currPosPin);
 
@@ -402,14 +400,24 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 			mapView.postInvalidate();
 		}
+		//isDrawing = false;
 	}
 
 	public boolean drawUserContOverlay()
 	{
+		if ( isDrawingUserContent ) {
+			Log.i(TAG, "drawUserContOverlay skipped");
+			return false;
+		}
+		isDrawingUserContent = true;
+		
+		Log.i(TAG, "drawUserContOverlay going ahead");
+		
 		ArrayList<UserContEntry> usercontents = UserContHandler.getContent();
 		if (usercontents == null || usercontents.isEmpty())
 		{
 			Log.d(TAG, "usercontents is null");
+			isDrawingUserContent = false;
 			return false;
 		}
 
@@ -425,12 +433,23 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		}
 		overlays.add(currUserContPins);
 		mapView.postInvalidate();
+		
+		isDrawingUserContent = false;
 
 		return true;
 	}
 
 	public void drawBuddyPositionOverlay()
 	{
+		if ( isDrawing ) {
+			Log.i(TAG, "drawBuddyPositionOverlay skipped - isDrawing = true");
+			return;
+		}
+		
+		isDrawing = true;
+
+		Log.i(TAG, "drawBuddyPositionOverlay going ahead");
+		
 		ArrayList<BuddyEntry> buddies = BuddyHandler.getBuddiesOnMap(
 		         mapView.getMapCenter(), mapView.getLatitudeSpan(),
 		         mapView.getLongitudeSpan());
@@ -455,6 +474,8 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 			mapView.postInvalidate(); // Tell MapView to update itself
 		}
+
+		isDrawing = false;
 	}
 
 	// Helpers -------------------------------------------------------------
@@ -487,12 +508,17 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		if (prefs.getString("gtalk_username", "").equals("")
 		         || prefs.getString("gtalk_password", "").equals(""))
 		{
-			// Directs user to Settings activity
-			Toast.makeText(this,
-			         "Please Specify Google Talk Username and Password",
-			         Toast.LENGTH_LONG).show();
-			startActivity(new Intent(this, SettingsActivity.class));
-
+			// Show a dialog to redirect to settings
+			AlertDialog.Builder builder = new AlertDialog.Builder( this );
+			builder.setTitle("Welcome to My City!");
+			builder.setMessage("This is your first time using this app. Please specify your username and password before continuing.");
+			builder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
+		        public void onClick(DialogInterface dialog, int whichButton) {
+					startActivity(new Intent(getApplicationContext(), SettingsActivity.class));
+		        }
+			});
+			
+			builder.show();
 			return false;
 		}
 
@@ -512,5 +538,101 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	}
 	
 	
+	private void showShoutDialog() {
+		final EditText inputTextLayout = new EditText(this);
+        
+		AlertDialog.Builder builder = new AlertDialog.Builder( this );
+		builder.setTitle("Enter shout message: ");
+		builder.setView(inputTextLayout);
+		
+		builder.setPositiveButton("Shout!", new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int whichButton) {
+	        	// Check if any buddy in range
+	        	ArrayList<BuddyEntry> buddiesInRange = BuddyHandler.getBuddiesOnMap(mapView.getMapCenter(), mapView.getLatitudeSpan(), mapView.getLongitudeSpan());
+	        	if ( buddiesInRange.isEmpty() ) {
+	        		Toast.makeText(getApplicationContext(), "No buddies in range. Try again later!", Toast.LENGTH_LONG).show();
+	        		return;
+	        	}// else if ( buddiesInRange.size() == 1 ) {
+	        	//	Toast.makeText(getApplicationContext(), "Only one buddy in range. Not initialing shout.", Toast.LENGTH_LONG).show();
+	        	//	return;
+	        	//}
+	        	
+	        	// Make shout
+	        	if ( GTalkHandler.createMultiChatRoom(buddiesInRange, inputTextLayout.getText().toString().trim() ) ) {
+	        		Toast.makeText(getApplicationContext(), "Shout sent successfully!", Toast.LENGTH_LONG).show();
+	        		// TODO: Open chat activity after invitation
+	        	} else {
+	        		Toast.makeText(getApplicationContext(), "Error when shouting. Check your connection.", Toast.LENGTH_LONG).show();
+	        	}
+	        }
+		});
+		
+		builder.setNegativeButton("Cancel", null);
+		builder.show();
+	}
+	
+	private void updateUserContent() {
+		if ( mLoadUserContentAsyncTask == null )
+			mLoadUserContentAsyncTask = new LoadUserContentAsyncTask();
+		else {
+			Status status = mLoadUserContentAsyncTask.getStatus();
+			// Check if task is already running
+			if ( status == AsyncTask.Status.RUNNING ) {
+				// Task is running, request ignored
+				Log.d(TAG, "Task is running, request ignored");
+				return;
+			} else if ( status == AsyncTask.Status.FINISHED || status == AsyncTask.Status.PENDING ) {
+				// Previously finished task found, recreating
+				Log.d(TAG, "Previously finished task found, recreating");
+				mLoadUserContentAsyncTask = new LoadUserContentAsyncTask();
+			}
+		}
+		
+		mLoadUserContentAsyncTask.execute( new MapSpan(mapView.getMapCenter(), mapView.getLatitudeSpan(),
+		         mapView.getLongitudeSpan()) );
+	}
+	
+	protected class MapSpan {
+		public GeoPoint gp;
+		public int latSpan;
+		public int lonSpan;
+		
+		public MapSpan(GeoPoint gp, int latSpan, int lonSpan) {
+			this.gp = gp;
+			this.latSpan = latSpan;
+			this.lonSpan = lonSpan;
+		}
+	}
+	
+	private class LoadUserContentAsyncTask extends AsyncTask<MapSpan, Void, Boolean> {
+		private final static String TAG = "LoadUserContentAsyncTask";
+	    @Override
+	    protected void onPreExecute() {
+	    	// update the UI immediately after the task is executed
+	    	super.onPreExecute();
+	    	Toast.makeText(getApplicationContext(), "Loading user contents...", Toast.LENGTH_SHORT).show();
+	    }
+	    
+		@Override
+		protected Boolean doInBackground(MapSpan... params) {
+			// TODO: Implement MapSpan
+			return UserContHandler.updateContent();
+		}
+		
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean res) {
+			super.onPostExecute(res);
 
+			//Toast.makeText(getApplicationContext(), "Done loading!", Toast.LENGTH_SHORT).show();
+			Log.d(TAG, "Done loading!");
+			
+			if (res)
+				drawUserContOverlay();
+		}
+	}
 }

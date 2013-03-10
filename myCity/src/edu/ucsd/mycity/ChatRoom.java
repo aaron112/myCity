@@ -13,8 +13,6 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
-import android.util.Log;
-
 /**
  * @author Aaron
  *
@@ -45,7 +43,7 @@ public class ChatRoom implements PacketListener, MessageListener {
 	private Chat sc = null;
 	private MultiUserChat muc = null;
 
-	private BuddyEntry participant;					// Single user mode
+	private BuddyEntry participant;					// Single user mode: user addr, Multi-user mode: chatroom addr
 	private ArrayList<BuddyEntry> participants;		// Multi-user mode
 	private ArrayList<ChatMessage> messages = new ArrayList<ChatMessage>();
 	
@@ -68,14 +66,18 @@ public class ChatRoom implements PacketListener, MessageListener {
 	public ChatRoom(MultiUserChat newmuc, String title) {
 		isMultiUser = true;
 		muc = newmuc;
-		try {
-			muc.join( GTalkHandler.getUserBareAddr() );
-		} catch (XMPPException e) {
-			Log.e("ChatRoom", "Error in create room: "+e.toString());
-		}
+		//try {
+		//	muc.join( GTalkHandler.getUserBareAddr() );
+		//} catch (XMPPException e) {
+		//	Log.e("ChatRoom", "Error in create room: "+e.toString());
+		//}
 		
-		//muc.addMessageListener(this);
+		muc.addMessageListener(this);
 		this.title = title;
+	}
+	
+	public boolean isMultiUser() {
+		return isMultiUser;
 	}
 	
 	public String getTitle() {
@@ -106,9 +108,11 @@ public class ChatRoom implements PacketListener, MessageListener {
 
 	// Return boolean indicates if send is successful
 	public boolean sendMessage(String message) {
+		addMessage(null, message);	// contact = null indicates myself
+		
 		if ( isMultiUser ) {
 			try {
-				muc.sendMessage(message);
+				muc.sendMessage("<from>"+GTalkHandler.getUserBareAddr()+"</from>"+message);
 			} catch (XMPPException e) {
 				return false;
 			}
@@ -116,7 +120,6 @@ public class ChatRoom implements PacketListener, MessageListener {
 		}
 		
 		// Single-user mode
-		addMessage(null, message);	// contact = null indicates myself
 		if ( !participant.getPresence().isAvailable() )
 			addMessage(null, "(The recipient is offline, message will be delivered when the user is online.)");
 		
@@ -128,22 +131,27 @@ public class ChatRoom implements PacketListener, MessageListener {
 	@Override
 	// For multi-user only
 	public void processPacket(Packet packet) {
+		/***** Disabled
 		Message message = (Message) packet;
 		
 		if (message.getBody() == null)
 			return;
 		
 		addMessage( BuddyHandler.getBuddy( BuddyHandler.getBareAddr(message.getFrom()) ), message.getBody() );
+		*/
 	}
 
 	@Override
 	// For single-user only
 	public void processMessage(Chat chat, Message message) {
+
+		/***** Disabled
 		if (message.getBody() == null)
 			return;
 		
 		// New incoming message
-		//addMessage( participant, message.getBody() );
+		addMessage( participant, message.getBody() );
+		 */
 	}
 
 	public boolean addParticipants(ArrayList<BuddyEntry> buddies, String invitemsg) {

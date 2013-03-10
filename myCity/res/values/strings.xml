@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">My City</string>
+    <string name="menu_shout">Shout!</string>
     <string name="menu_buddyList">Contacts</string>
     <string name="menu_chat">Chats</string>
     <string name="menu_closechat">Close Conversation</string>
@@ -18,5 +19,7 @@
     <string name="button_send">Send</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_add_user_cont">Add a user content</string>
+    <string name="title_activity_show_user_cont">Show user content</string>
+    <string name="action_settings">Settings</string>
 
 </resources>
