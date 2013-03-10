@@ -1,8 +1,11 @@
-package edu.ucsd.mycity;
+package edu.ucsd.mycity.chat;
 
 import java.util.List;
 
-import edu.ucsd.mycity.ChatRoom.ChatMessage;
+import edu.ucsd.mycity.R;
+import edu.ucsd.mycity.R.drawable;
+import edu.ucsd.mycity.R.id;
+import edu.ucsd.mycity.chat.ChatRoom.ChatMessage;
 
 import android.app.Activity;
 import android.util.Log;

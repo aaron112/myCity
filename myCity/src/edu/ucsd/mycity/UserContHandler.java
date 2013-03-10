@@ -24,6 +24,8 @@ import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
 
+import edu.ucsd.mycity.usercontent.UserContEntry;
+
 public class UserContHandler
 {
 	private static String TAG = "UserContHandler";

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.ucsd.mycity;
+package edu.ucsd.mycity.chat;
 
 import java.util.ArrayList;
 
@@ -12,6 +12,9 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+
+import edu.ucsd.mycity.GTalkHandler;
+import edu.ucsd.mycity.buddy.BuddyEntry;
 
 /**
  * @author Aaron

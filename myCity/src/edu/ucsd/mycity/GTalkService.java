@@ -19,6 +19,7 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import edu.ucsd.mycity.chat.ChatRoom;
 import edu.ucsd.mycity.utils.MultiChat;
 
 import android.app.NotificationManager;

@@ -29,6 +29,8 @@ import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
 
+import edu.ucsd.mycity.buddy.BuddyEntry;
+
 public class BuddyHandler
 {
 	private static final String TAG = "BuddyHandler";

@@ -1,4 +1,4 @@
-package edu.ucsd.mycity;
+package edu.ucsd.mycity.utils;
 
 /**
  * PinsOverlay.java - Customized Overlay class for BuddyOverlayItem

@@ -1,4 +1,4 @@
-package edu.ucsd.mycity;
+package edu.ucsd.mycity.buddy;
 
 /**
  * BuddyOverlayItem.java - Customized overlay item for buddies

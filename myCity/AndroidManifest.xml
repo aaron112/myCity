@@ -39,7 +39,7 @@
             android:windowSoftInputMode="adjustResize" >
         </activity>
         <activity
-            android:name="edu.ucsd.mycity.BuddyList"
+            android:name="edu.ucsd.mycity.buddy.BuddyList"
             android:label="@string/title_activity_buddy_list" >
         </activity>
         <activity

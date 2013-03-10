@@ -43,6 +43,10 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 
+import edu.ucsd.mycity.buddy.BuddyEntry;
+import edu.ucsd.mycity.buddy.BuddyList;
+import edu.ucsd.mycity.buddy.BuddyOverlayItem;
+import edu.ucsd.mycity.buddy.BuddyPinsOverlay;
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
@@ -50,6 +54,10 @@ import edu.ucsd.mycity.listeners.RosterClient;
 import edu.ucsd.mycity.maptrack.OnLongpressListener;
 import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
 import edu.ucsd.mycity.maptrack.TrackedMapView;
+import edu.ucsd.mycity.usercontent.UserContEntry;
+import edu.ucsd.mycity.usercontent.UserContOverlayItem;
+import edu.ucsd.mycity.usercontent.UserContPinsOverlay;
+import edu.ucsd.mycity.utils.PinsOverlay;
 
 public class Map extends MapActivity implements RosterClient, LocationClient,
          ConnectionClient, BuddyLocationClient, OnMapViewChangeListener, View.OnClickListener

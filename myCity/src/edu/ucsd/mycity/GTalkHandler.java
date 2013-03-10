@@ -28,6 +28,8 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import edu.ucsd.mycity.buddy.BuddyEntry;
+import edu.ucsd.mycity.chat.ChatRoom;
 import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.ChatClient;
 import edu.ucsd.mycity.listeners.ConnectionClient;

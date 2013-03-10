@@ -18,7 +18,14 @@ package edu.ucsd.mycity;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import edu.ucsd.mycity.ChatRoom.ChatMessage;
+import edu.ucsd.mycity.R;
+import edu.ucsd.mycity.R.id;
+import edu.ucsd.mycity.R.layout;
+import edu.ucsd.mycity.R.menu;
+import edu.ucsd.mycity.buddy.BuddyList;
+import edu.ucsd.mycity.chat.ChatMsgArrayAdapter;
+import edu.ucsd.mycity.chat.ChatRoom;
+import edu.ucsd.mycity.chat.ChatRoom.ChatMessage;
 import edu.ucsd.mycity.listeners.ChatClient;
 
 import android.app.Activity;

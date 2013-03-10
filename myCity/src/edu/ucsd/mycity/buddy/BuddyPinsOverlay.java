@@ -1,4 +1,4 @@
-package edu.ucsd.mycity;
+package edu.ucsd.mycity.buddy;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +7,10 @@ import android.os.Bundle;
 
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
+
+import edu.ucsd.mycity.ChatActivity;
+import edu.ucsd.mycity.utils.PinsOverlay;
+
 
 public class BuddyPinsOverlay extends PinsOverlay
 {

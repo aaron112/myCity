@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.ucsd.mycity;
+package edu.ucsd.mycity.usercontent;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +11,9 @@ import android.util.Log;
 
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
+
+import edu.ucsd.mycity.ShowUserContActivity;
+import edu.ucsd.mycity.utils.PinsOverlay;
 
 /**
  * @author FLL
