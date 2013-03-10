@@ -11,13 +11,13 @@ import com.google.android.maps.GeoPoint;
  */
 public class LocalServiceItem {
 
-	private String type = "";
+	private String[] type;
 	private String name = "";
 	private String phone = "";
 	private String address = "";
 	private GeoPoint location;
 	
-	public LocalServiceItem(String type, String name, String phone, String address, GeoPoint location) {
+	public LocalServiceItem(String[] type, String name, String phone, String address, GeoPoint location) {
 		this.type = type;
 		this.name = name;
 		this.phone = phone;
@@ -25,10 +25,10 @@ public class LocalServiceItem {
 		this.location = location;
 	}
 	
-	public String getType() {
+	public String[] getType() {
 		return type;
 	}
-	public void setType(String type) {
+	public void setType(String[] type) {
 		this.type = type;
 	}
 	
