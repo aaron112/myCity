@@ -109,10 +109,11 @@ public class ChatActivity extends Activity implements ChatClient {
 			// TODO: start with multi chat
 			Log.d(TAG, "Starting with Multi user mode.");
 		}	
-		
-		// Initial chat room switch
+
+		// Initial chat room switch done when spinner initialized
 		buildChatList();
-		switchChatRoom(mChatRoomID);
+		//switchChatRoom(mChatRoomID);
+		//Log.d(TAG, "Initial chat room switch done.");
 		
 		// Set a listener to switch chat "window"
 		chating_with.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -247,7 +248,7 @@ public class ChatActivity extends Activity implements ChatClient {
 	    spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    chating_with.setAdapter(spinnerArrayAdapter);
 	    // Update selection
-	    chating_with.setSelection( chatTitles.indexOf( mChatRoom==null ? 0 : mChatRoom.getTitle() ), true);
+	    chating_with.setSelection( chatTitles.indexOf( mChatRoomID ), true);
 	}
 	
 	private void buildMsgList() {
@@ -264,6 +265,8 @@ public class ChatActivity extends Activity implements ChatClient {
 	}
 	
 	private void switchChatRoom(String chatRoomID) {
+		Log.i(TAG, "switchChatRoom: " + chatRoomID);
+		
 		this.mChatRoomID = chatRoomID;
 		this.mChatRoom = chatRooms.get(chatRoomID);
 		buildMsgList();

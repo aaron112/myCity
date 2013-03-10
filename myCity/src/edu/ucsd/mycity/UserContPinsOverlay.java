@@ -42,10 +42,11 @@ public class UserContPinsOverlay extends PinsOverlay
 		}
 
 		// Start ChatActivity
-		Intent i = new Intent(mContext, LoadUserContActivity.class);
+		Intent i = new Intent(mContext, ShowUserContActivity.class);
 		Bundle bundle = new Bundle();
 
 		bundle.putString("name", user_item.getEntry().getName());
+		bundle.putString("user", user_item.getEntry().getUser());
 		bundle.putString("description", user_item.getEntry().getDescription());
 		bundle.putString("picKey", user_item.getEntry().getPicKey());
 		i.putExtras(bundle);

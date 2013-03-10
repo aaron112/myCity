@@ -56,8 +56,8 @@
             android:enabled="true" />
 
         <activity
-            android:name="edu.ucsd.mycity.LoadUserContActivity"
-            android:label="@string/title_activity_load_user_cont" >
+            android:name="edu.ucsd.mycity.ShowUserContActivity"
+            android:label="@string/title_activity_show_user_cont" >
         </activity>
     </application>
 

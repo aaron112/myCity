@@ -19,24 +19,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
-import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.os.AsyncTask;
+import android.os.AsyncTask.Status;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -63,6 +61,9 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	public static final int LOGIN_MENU_STATE_LOGGED_OUT = 0;
 	public static final int LOGIN_MENU_STATE_LOGGED_IN = 1;
 
+	private boolean isDrawing;	// to prevent concurrent draws
+	private boolean isDrawingUserContent;
+	
 	private SharedPreferences prefs;
 
 	private MapController mapController;
@@ -74,7 +75,9 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	private PinsOverlay currPosPin = null;
 	private PinsOverlay currBuddyPins = null;
 	private PinsOverlay currUserContPins = null;
-
+	
+	private LoadUserContentAsyncTask mLoadUserContentAsyncTask = null;
+	
 	private MenuItem loginMenuItem;
 	private int loginMenuItemState = LOGIN_MENU_STATE_LOGGED_OUT;
 	private Button refreshBtn;
@@ -129,6 +132,9 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	{
 		Log.i(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
+		
+		isDrawing = false;
+		isDrawingUserContent = false;
 
 		prefs = PreferenceManager
 		         .getDefaultSharedPreferences(getApplicationContext());
@@ -183,10 +189,8 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 			         "Currently in Offline Mode (Auto login disabled)",
 			         Toast.LENGTH_LONG).show();
 		}
-
-		UserContHandler.updateContent();
-		// drawUserContOverlay();
-
+		
+		updateUserContent();
 	}
 
 	@Override
@@ -305,10 +309,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		Log.d(TAG, "onMapViewChange!");
 		// Redraw pins
 		drawBuddyPositionOverlay();
-		drawUserContOverlay();
-
-		UserContHandler.updateContent();
-
+		updateUserContent();
 	}
 
 	@Override
@@ -381,6 +382,10 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 	public void drawCurrPositionOverlay()
 	{
+		//if ( isDrawing )
+		//	return;
+		
+		//isDrawing = true;
 		List<Overlay> overlays = mapView.getOverlays();
 		overlays.remove(currPosPin);
 
@@ -395,14 +400,24 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 			mapView.postInvalidate();
 		}
+		//isDrawing = false;
 	}
 
 	public boolean drawUserContOverlay()
 	{
+		if ( isDrawingUserContent ) {
+			Log.i(TAG, "drawUserContOverlay skipped");
+			return false;
+		}
+		isDrawingUserContent = true;
+		
+		Log.i(TAG, "drawUserContOverlay going ahead");
+		
 		ArrayList<UserContEntry> usercontents = UserContHandler.getContent();
 		if (usercontents == null || usercontents.isEmpty())
 		{
 			Log.d(TAG, "usercontents is null");
+			isDrawingUserContent = false;
 			return false;
 		}
 
@@ -418,12 +433,23 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		}
 		overlays.add(currUserContPins);
 		mapView.postInvalidate();
+		
+		isDrawingUserContent = false;
 
 		return true;
 	}
 
 	public void drawBuddyPositionOverlay()
 	{
+		if ( isDrawing ) {
+			Log.i(TAG, "drawBuddyPositionOverlay skipped - isDrawing = true");
+			return;
+		}
+		
+		isDrawing = true;
+
+		Log.i(TAG, "drawBuddyPositionOverlay going ahead");
+		
 		ArrayList<BuddyEntry> buddies = BuddyHandler.getBuddiesOnMap(
 		         mapView.getMapCenter(), mapView.getLatitudeSpan(),
 		         mapView.getLongitudeSpan());
@@ -448,6 +474,8 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 			mapView.postInvalidate(); // Tell MapView to update itself
 		}
+
+		isDrawing = false;
 	}
 
 	// Helpers -------------------------------------------------------------
@@ -490,8 +518,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		        }
 			});
 			
-			AlertDialog dialog = builder.show();
-
+			builder.show();
 			return false;
 		}
 
@@ -541,6 +568,71 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		});
 		
 		builder.setNegativeButton("Cancel", null);
-		AlertDialog dialog = builder.show();
+		builder.show();
+	}
+	
+	private void updateUserContent() {
+		if ( mLoadUserContentAsyncTask == null )
+			mLoadUserContentAsyncTask = new LoadUserContentAsyncTask();
+		else {
+			Status status = mLoadUserContentAsyncTask.getStatus();
+			// Check if task is already running
+			if ( status == AsyncTask.Status.RUNNING ) {
+				// Task is running, request ignored
+				Log.d(TAG, "Task is running, request ignored");
+				return;
+			} else if ( status == AsyncTask.Status.FINISHED || status == AsyncTask.Status.PENDING ) {
+				// Previously finished task found, recreating
+				Log.d(TAG, "Previously finished task found, recreating");
+				mLoadUserContentAsyncTask = new LoadUserContentAsyncTask();
+			}
+		}
+		
+		mLoadUserContentAsyncTask.execute( new MapSpan(mapView.getMapCenter(), mapView.getLatitudeSpan(),
+		         mapView.getLongitudeSpan()) );
+	}
+	
+	protected class MapSpan {
+		public GeoPoint gp;
+		public int latSpan;
+		public int lonSpan;
+		
+		public MapSpan(GeoPoint gp, int latSpan, int lonSpan) {
+			this.gp = gp;
+			this.latSpan = latSpan;
+			this.lonSpan = lonSpan;
+		}
+	}
+	
+	private class LoadUserContentAsyncTask extends AsyncTask<MapSpan, Void, Boolean> {
+		private final static String TAG = "LoadUserContentAsyncTask";
+	    @Override
+	    protected void onPreExecute() {
+	    	// update the UI immediately after the task is executed
+	    	super.onPreExecute();
+	    	Toast.makeText(getApplicationContext(), "Loading user contents...", Toast.LENGTH_SHORT).show();
+	    }
+	    
+		@Override
+		protected Boolean doInBackground(MapSpan... params) {
+			// TODO: Implement MapSpan
+			return UserContHandler.updateContent();
+		}
+		
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean res) {
+			super.onPostExecute(res);
+
+			//Toast.makeText(getApplicationContext(), "Done loading!", Toast.LENGTH_SHORT).show();
+			Log.d(TAG, "Done loading!");
+			
+			if (res)
+				drawUserContOverlay();
+		}
 	}
 }
