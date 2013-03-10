@@ -20,27 +20,27 @@ import android.util.Log;
 import com.google.android.maps.GeoPoint;
 
 import edu.ucsd.mycity.localservices.LocalServiceItem;
-import edu.ucsd.mycity.localservices.LocalServiceProviderAdapter;
 
-public class PlacesHandler implements LocalServiceProviderAdapter {
+public class PlacesHandler {
 
-	private final String KEY = "&key=AIzaSyDsjGIZwOHvaALxTbI4jYMMqrlmDtE2_nQ";
-	private final String SENSOR = "&sensor=false";
-	private final String TAG = "PlacesHandler";
-	private final String URL = "https://maps.googleapis.com/maps/api/place/";
+	private final static String KEY = "&key=AIzaSyDsjGIZwOHvaALxTbI4jYMMqrlmDtE2_nQ";
+	private final static String SENSOR = "&sensor=false";
+	private final static String TAG = "PlacesHandler";
+	private final static String URL = "https://maps.googleapis.com/maps/api/place/";
 	
-	private double latitude;
-	private double longitude;
+	private static ArrayList<LocalServiceItem> placesList;
 	
-	@Override
-	public ArrayList<LocalServiceItem> getLocalServices(GeoPoint center,
-			int latSpan, int lonSpan) {
+	public static ArrayList<LocalServiceItem> getLocalServices() {
+		return placesList;
+	}
+	
+	public static boolean updateLocalServices(GeoPoint center, int latSpan, int lonSpan) {
 
-		ArrayList<LocalServiceItem> placesList = new ArrayList<LocalServiceItem>();
+		placesList = new ArrayList<LocalServiceItem>();
 		LocalServiceItem item;
 		
-		this.latitude = center.getLatitudeE6() / 1E6;
-		this.longitude = center.getLongitudeE6() / 1E6;
+		double latitude = center.getLatitudeE6() / 1E6;
+		double longitude = center.getLongitudeE6() / 1E6;
 		
 		int radius = (int) Math.sqrt( Math.pow( latSpan/2, 2 ) + Math.pow( lonSpan/2, 2 ) );
 		
@@ -48,7 +48,7 @@ public class PlacesHandler implements LocalServiceProviderAdapter {
 		String detailedURL;
 		
 		JSONArray searchArray = searchForPlaces( placesURL );
-		String[] types;
+		ArrayList<String> types;
 		String name = "";
 		String phone = "";
 		String address = "";
@@ -74,24 +74,25 @@ public class PlacesHandler implements LocalServiceProviderAdapter {
 				
 			} catch( JSONException e ) {
 				Log.d( TAG, "Error in parsing JSON in for loop" );
+				return false;
 			}
 		}
 		
-		return placesList;
+		return true;
 	}
 
-	private GeoPoint getLocation(JSONObject resultObj) throws JSONException {
+	private static GeoPoint getLocation(JSONObject resultObj) throws JSONException {
 		JSONObject locationObj = resultObj.getJSONObject( "geometry" ).getJSONObject( "location" );
 		int lat = (int) ( locationObj.getDouble( "lat" ) * 1E6 );
 		int lng = (int) ( locationObj.getDouble( "lng" ) * 1E6 );
 		return new GeoPoint( lat, lng );
 	}
 
-	private String getAddress(JSONObject resultObj) throws JSONException {
+	private static String getAddress(JSONObject resultObj) throws JSONException {
 		return resultObj.getString( "formatted_address" );
 	}
 
-	private String getPhoneNumber(JSONObject resultObj) throws JSONException {
+	private static String getPhoneNumber(JSONObject resultObj) throws JSONException {
 		String phone = "";
 		
 		if( !resultObj.isNull( "formatted_phone_number" ) ) {
@@ -101,21 +102,22 @@ public class PlacesHandler implements LocalServiceProviderAdapter {
 		return phone;
 	}
 
-	private String getName(JSONObject resultObj) throws JSONException {
+	private static String getName(JSONObject resultObj) throws JSONException {
 		return resultObj.getString( "name" );
 	}
 
-	private String[] getTypes(JSONObject resultObj) throws JSONException {
+	private static ArrayList<String> getTypes(JSONObject resultObj) throws JSONException {
 		JSONArray typesArray = resultObj.getJSONArray( "types" );
-		String[] types = new String[ typesArray.length() ];
 		
-		for( int j = 0; j < typesArray.length(); j++ ) {
-			types[j] = typesArray.getString( j );
+		ArrayList<String> types = new ArrayList<String>();
+		
+		for ( int j = 0; j < typesArray.length(); j++ ) {
+			types.add( typesArray.getString( j ) );
 		}
 		return types;
 	}
 		
-	private JSONArray searchForPlaces( String url ) {
+	private static JSONArray searchForPlaces( String url ) {
 		HttpClient client = new DefaultHttpClient();
 		HttpGet request = new HttpGet( url );
 		
@@ -144,7 +146,7 @@ public class PlacesHandler implements LocalServiceProviderAdapter {
 		return null;
 	}
 	
-	private JSONObject detailedPlaces( String url ) {
+	private static JSONObject detailedPlaces( String url ) {
 		HttpClient client = new DefaultHttpClient();
 		HttpGet request = new HttpGet( url );
 		

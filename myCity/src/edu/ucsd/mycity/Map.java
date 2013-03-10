@@ -51,6 +51,9 @@ import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.listeners.RosterClient;
+import edu.ucsd.mycity.localservices.LocalServiceItem;
+import edu.ucsd.mycity.localservices.LocalServiceOverlayItem;
+import edu.ucsd.mycity.localservices.LocalServicePinsOverlay;
 import edu.ucsd.mycity.maptrack.OnLongpressListener;
 import edu.ucsd.mycity.maptrack.OnMapViewChangeListener;
 import edu.ucsd.mycity.maptrack.TrackedMapView;
@@ -71,6 +74,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 
 	private boolean isDrawing;	// to prevent concurrent draws
 	private boolean isDrawingUserContent;
+	private boolean isDrawingLocalServices;
 	
 	private SharedPreferences prefs;
 
@@ -83,8 +87,10 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	private PinsOverlay currPosPin = null;
 	private PinsOverlay currBuddyPins = null;
 	private PinsOverlay currUserContPins = null;
+	private PinsOverlay currLocalServicePins = null;
 	
 	private LoadUserContentAsyncTask mLoadUserContentAsyncTask = null;
+	private LoadLocalServicesAsyncTask mLoadLocalServicesAsyncTask = null;
 	
 	private MenuItem loginMenuItem;
 	private int loginMenuItemState = LOGIN_MENU_STATE_LOGGED_OUT;
@@ -318,6 +324,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		// Redraw pins
 		drawBuddyPositionOverlay();
 		updateUserContent();
+		updateLocalServices();
 	}
 
 	@Override
@@ -411,42 +418,6 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		//isDrawing = false;
 	}
 
-	public boolean drawUserContOverlay()
-	{
-		if ( isDrawingUserContent ) {
-			Log.i(TAG, "drawUserContOverlay skipped");
-			return false;
-		}
-		isDrawingUserContent = true;
-		
-		Log.i(TAG, "drawUserContOverlay going ahead");
-		
-		ArrayList<UserContEntry> usercontents = UserContHandler.getContent();
-		if (usercontents == null || usercontents.isEmpty())
-		{
-			Log.d(TAG, "usercontents is null");
-			isDrawingUserContent = false;
-			return false;
-		}
-
-		List<Overlay> overlays = mapView.getOverlays();
-		overlays.remove(currUserContPins);
-
-		Drawable marker = getResources().getDrawable(R.drawable.user_cont_pin);
-		currUserContPins = new UserContPinsOverlay(marker, mapView);
-
-		for (UserContEntry entry : usercontents)
-		{
-			currUserContPins.addOverlay(new UserContOverlayItem(entry));
-		}
-		overlays.add(currUserContPins);
-		mapView.postInvalidate();
-		
-		isDrawingUserContent = false;
-
-		return true;
-	}
-
 	public void drawBuddyPositionOverlay()
 	{
 		if ( isDrawing ) {
@@ -484,6 +455,78 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		}
 
 		isDrawing = false;
+	}
+
+	public boolean drawUserContOverlay()
+	{
+		if ( isDrawingUserContent ) {
+			Log.i(TAG, "drawUserContOverlay skipped");
+			return false;
+		}
+		isDrawingUserContent = true;
+		
+		Log.i(TAG, "drawUserContOverlay going ahead");
+		
+		ArrayList<UserContEntry> usercontents = UserContHandler.getContent();
+		if (usercontents == null || usercontents.isEmpty())
+		{
+			Log.d(TAG, "usercontents is null");
+			isDrawingUserContent = false;
+			return false;
+		}
+
+		List<Overlay> overlays = mapView.getOverlays();
+		overlays.remove(currUserContPins);
+
+		Drawable marker = getResources().getDrawable(R.drawable.user_cont_pin);
+		currUserContPins = new UserContPinsOverlay(marker, mapView);
+
+		for (UserContEntry entry : usercontents)
+		{
+			currUserContPins.addOverlay(new UserContOverlayItem(entry));
+		}
+		overlays.add(currUserContPins);
+		mapView.postInvalidate();
+		
+		isDrawingUserContent = false;
+
+		return true;
+	}
+
+	public boolean drawLocalServicesOverlay()
+	{
+		if ( isDrawingLocalServices ) {
+			Log.i(TAG, "isDrawingLocalServices skipped");
+			return false;
+		}
+		isDrawingLocalServices = true;
+		
+		Log.i(TAG, "isDrawingLocalServices going ahead");
+		
+		ArrayList<LocalServiceItem> localServices = PlacesHandler.getLocalServices();
+		if (localServices == null || localServices.isEmpty())
+		{
+			Log.d(TAG, "localServices is null");
+			isDrawingLocalServices = false;
+			return false;
+		}
+
+		List<Overlay> overlays = mapView.getOverlays();
+		overlays.remove(currLocalServicePins);
+
+		Drawable marker = getResources().getDrawable(R.drawable.map_pointer_localservices);
+		currLocalServicePins = new LocalServicePinsOverlay(marker, mapView);
+
+		for (LocalServiceItem item : localServices)
+		{
+			currLocalServicePins.addOverlay(new LocalServiceOverlayItem(item));
+		}
+		overlays.add(currLocalServicePins);
+		mapView.postInvalidate();
+		
+		isDrawingLocalServices = false;
+
+		return true;
 	}
 
 	// Helpers -------------------------------------------------------------
@@ -579,6 +622,18 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		builder.show();
 	}
 	
+	protected class MapSpan {
+		public GeoPoint gp;
+		public int latSpan;
+		public int lonSpan;
+		
+		public MapSpan(GeoPoint gp, int latSpan, int lonSpan) {
+			this.gp = gp;
+			this.latSpan = latSpan;
+			this.lonSpan = lonSpan;
+		}
+	}
+	
 	private void updateUserContent() {
 		if ( mLoadUserContentAsyncTask == null )
 			mLoadUserContentAsyncTask = new LoadUserContentAsyncTask();
@@ -598,18 +653,6 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		
 		mLoadUserContentAsyncTask.execute( new MapSpan(mapView.getMapCenter(), mapView.getLatitudeSpan(),
 		         mapView.getLongitudeSpan()) );
-	}
-	
-	protected class MapSpan {
-		public GeoPoint gp;
-		public int latSpan;
-		public int lonSpan;
-		
-		public MapSpan(GeoPoint gp, int latSpan, int lonSpan) {
-			this.gp = gp;
-			this.latSpan = latSpan;
-			this.lonSpan = lonSpan;
-		}
 	}
 	
 	private class LoadUserContentAsyncTask extends AsyncTask<MapSpan, Void, Boolean> {
@@ -641,6 +684,58 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 			
 			if (res)
 				drawUserContOverlay();
+		}
+	}
+	
+	private void updateLocalServices() {
+		if ( mLoadLocalServicesAsyncTask == null )
+			mLoadLocalServicesAsyncTask = new LoadLocalServicesAsyncTask();
+		else {
+			Status status = mLoadLocalServicesAsyncTask.getStatus();
+			// Check if task is already running
+			if ( status == AsyncTask.Status.RUNNING ) {
+				// Task is running, request ignored
+				Log.d(TAG, "Task is running, request ignored");
+				return;
+			} else if ( status == AsyncTask.Status.FINISHED || status == AsyncTask.Status.PENDING ) {
+				// Previously finished task found, recreating
+				Log.d(TAG, "Previously finished task found, recreating");
+				mLoadLocalServicesAsyncTask = new LoadLocalServicesAsyncTask();
+			}
+		}
+		
+		mLoadLocalServicesAsyncTask.execute( new MapSpan(mapView.getMapCenter(), mapView.getLatitudeSpan(),
+		         mapView.getLongitudeSpan()) );
+	}
+	
+	private class LoadLocalServicesAsyncTask extends AsyncTask<MapSpan, Void, Boolean> {
+		private final static String TAG = "LoadLocalServicesAsyncTask";
+	    @Override
+	    protected void onPreExecute() {
+	    	// update the UI immediately after the task is executed
+	    	super.onPreExecute();
+	    	Toast.makeText(getApplicationContext(), "Loading local services...", Toast.LENGTH_SHORT).show();
+	    }
+	    
+		@Override
+		protected Boolean doInBackground(MapSpan... params) {
+			return PlacesHandler.updateLocalServices(params[0].gp, params[0].latSpan, params[0].lonSpan);
+		}
+		
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			super.onProgressUpdate(values);
+		}
+		
+		@Override
+		protected void onPostExecute(Boolean res) {
+			super.onPostExecute(res);
+
+			Toast.makeText(getApplicationContext(), "Done loading local services.", Toast.LENGTH_SHORT).show();
+			Log.d(TAG, "Done loading!");
+			
+			if (res)
+				drawLocalServicesOverlay();
 		}
 	}
 }

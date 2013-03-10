@@ -3,33 +3,40 @@
  */
 package edu.ucsd.mycity.localservices;
 
+import java.util.ArrayList;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.android.maps.GeoPoint;
+import edu.ucsd.mycity.utils.ParcelableGeoPoint;
 
 /**
  * @author Aaron
  *
  */
-public class LocalServiceItem {
+// Need to be Parcelable In order to be passed over by Android Intent
+public class LocalServiceItem implements Parcelable {
 
-	private String[] type;
+	private ArrayList<String> types;
 	private String name = "";
 	private String phone = "";
 	private String address = "";
 	private GeoPoint location;
 	
-	public LocalServiceItem(String[] type, String name, String phone, String address, GeoPoint location) {
-		this.type = type;
+	public LocalServiceItem(ArrayList<String> types, String name, String phone, String address, GeoPoint location) {
+		this.types = types;
 		this.name = name;
 		this.phone = phone;
 		this.address = address;
 		this.location = location;
 	}
 	
-	public String[] getType() {
-		return type;
+	public ArrayList<String> getTypes() {
+		return types;
 	}
-	public void setType(String[] type) {
-		this.type = type;
+	public void setType(ArrayList<String> types) {
+		this.types = types;
 	}
 	
 	public String getName() {
@@ -59,4 +66,45 @@ public class LocalServiceItem {
 	public void setLocation(GeoPoint location) {
 		this.location = location;
 	}
+	
+	// ------------ Start Parcelable --------------
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		//private ArrayList<String> types;
+		//private String name = "";
+		//private String phone = "";
+		//private String address = "";
+		//private GeoPoint location;
+		
+		dest.writeStringList(types);
+		dest.writeString(name);
+		dest.writeString(phone);
+		dest.writeString(address);
+		dest.writeParcelable( new ParcelableGeoPoint(location), flags );
+	}
+    
+    public LocalServiceItem(Parcel in) {
+    	// Read from parcel
+    	in.readStringList(this.types);
+    	this.name = in.readString();
+    	this.phone = in.readString();
+    	this.address = in.readString();
+    	this.location = ((ParcelableGeoPoint) in.readParcelable( ParcelableGeoPoint.class.getClassLoader() )).getGeoPoint();
+    }
+    
+    public static final Parcelable.Creator<LocalServiceItem> CREATOR = new Parcelable.Creator<LocalServiceItem>() {
+		public LocalServiceItem createFromParcel(Parcel in) {
+		    return new LocalServiceItem(in);
+		}
+		
+		public LocalServiceItem[] newArray(int size) {
+		    return new LocalServiceItem[size];
+		}
+	};
 }

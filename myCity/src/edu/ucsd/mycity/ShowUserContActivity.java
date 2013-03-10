@@ -1,7 +1,14 @@
 package edu.ucsd.mycity;
 
+import java.util.ArrayList;
+
+import edu.ucsd.mycity.buddy.BuddyEntry;
+import edu.ucsd.mycity.localservices.LocalServiceItem;
+import edu.ucsd.mycity.usercontent.UserContEntry;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
@@ -10,9 +17,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ShowUserContActivity extends Activity
 {
@@ -30,22 +39,23 @@ public class ShowUserContActivity extends Activity
 		setContentView(R.layout.activity_show_user_cont);
 
 		Bundle b = getIntent().getExtras();
-
+		UserContEntry entry = (UserContEntry) b.getParcelable("UserContEntry");
+		
 		name = (TextView) findViewById(R.id.nameView);
-		name.setText(b.getString("name"));
+		name.setText( entry.getName() );
 
 		description = (TextView) findViewById(R.id.descriptionView);
-		description.setText(b.getString("description"));
+		description.setText( entry.getDescription() );
 		
 		creatorView = (TextView) findViewById(R.id.creatorView);
-		creatorView.setText( "Created by: " + b.getString("user") );
+		creatorView.setText( "Created by: " + entry.getUser() );
 		
 		mImageView = (ImageView) findViewById(R.id.showImage);
     	mImageView.setImageBitmap(null);
 
-    	if ( !b.getString("picKey", "").equals("") ) {
+    	if ( !entry.getPicKey().equals("") ) {
     		dialog = ProgressDialog.show(this, "Downloading image...", "Please wait...", false);
-    		new DownloadImageAsyncTask().execute( b.getString("picKey") );
+    		new DownloadImageAsyncTask().execute( entry.getPicKey() );
     	}
 	}
 
