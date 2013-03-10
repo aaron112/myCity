@@ -1,6 +1,8 @@
 package edu.ucsd.mycity.localservices;
 
 
+import java.util.ArrayList;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -10,6 +12,10 @@ import android.widget.EditText;
 
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
+
+import edu.ucsd.mycity.BuddyHandler;
+import edu.ucsd.mycity.GTalkHandler;
+import edu.ucsd.mycity.buddy.BuddyEntry;
 import edu.ucsd.mycity.utils.PinsOverlay;
 
 public class LocalServicePinsOverlay extends PinsOverlay
@@ -52,21 +58,41 @@ public class LocalServicePinsOverlay extends PinsOverlay
 		return true;
 	}
 	
-	private void showLocalServiceDialog(LocalServiceItem item) {
+	private void showLocalServiceDialog(final LocalServiceItem item) {
 		final EditText inputTextLayout = new EditText( mContext );
         
-		AlertDialog.Builder builder = new AlertDialog.Builder( mContext );
-		builder.setTitle( item.getName() )
+		AlertDialog.Builder detailDialogBuilder = new AlertDialog.Builder( mContext );
+		detailDialogBuilder.setTitle( item.getName() )
 			   .setView( inputTextLayout )
-			   .setMessage( item.getAddress() );
+			   .setMessage( "Address: " + item.getAddress() + "\nInvite Message: \n" );
 		
-		builder.setPositiveButton("Send", new DialogInterface.OnClickListener() {
+		detailDialogBuilder.setPositiveButton("Meet here", new DialogInterface.OnClickListener() {
 	        public void onClick(DialogInterface dialog, int whichButton) {
 	        	
+	        	// Build buddy list:
+	        	final ArrayList<BuddyEntry> buddyList = BuddyHandler.getBuddies();
+	        	final CharSequence[] buddyNameList = new CharSequence[buddyList.size()];
+	        	for (int i=0; i < buddyList.size(); ++i) {
+	        		buddyNameList[i] = buddyList.get(i).getName();
+	        	}
+	        	
+	        	AlertDialog.Builder buddyDialogBuilder = new AlertDialog.Builder( mContext );
+	        	buddyDialogBuilder.setTitle( "Select a buddy to meet with: " )
+	        	.setItems(buddyNameList, new DialogInterface.OnClickListener() {
+	        		@Override
+	        		public void onClick(DialogInterface dialog, int which) {
+	        			// Buddy selected
+	        			GTalkHandler.sendLocalServiceInvitation(item, buddyList.get(which).getUser(),
+	        					inputTextLayout.getText().toString().trim());
+	        		}
+	    		});
+	    		
+	        	buddyDialogBuilder.setNegativeButton("Cancel", null);
+	        	buddyDialogBuilder.show();
 	        }
 		});
 		
-		builder.setNegativeButton("Cancel", null);
-		builder.show();
+		detailDialogBuilder.setNegativeButton("Close", null);
+		detailDialogBuilder.show();
 	}
 }

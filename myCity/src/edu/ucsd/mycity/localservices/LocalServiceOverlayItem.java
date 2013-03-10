@@ -13,7 +13,7 @@ public class LocalServiceOverlayItem extends OverlayItem
 	 */
 	public LocalServiceOverlayItem(LocalServiceItem item)
 	{
-		super(item.getLocation(), item.getName(), item.getPhone());
+		super(item.getLocation(), item.getName(), item.getAddress());
 		this.item = item;
 		// TODO Auto-generated constructor stub
 	}

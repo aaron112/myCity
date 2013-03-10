@@ -51,6 +51,7 @@ import edu.ucsd.mycity.listeners.BuddyLocationClient;
 import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.listeners.RosterClient;
+import edu.ucsd.mycity.localservices.GPlace;
 import edu.ucsd.mycity.localservices.LocalServiceItem;
 import edu.ucsd.mycity.localservices.LocalServiceOverlayItem;
 import edu.ucsd.mycity.localservices.LocalServicePinsOverlay;
@@ -496,14 +497,14 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	public boolean drawLocalServicesOverlay()
 	{
 		if ( isDrawingLocalServices ) {
-			Log.i(TAG, "isDrawingLocalServices skipped");
+			Log.i(TAG, "drawLocalServicesOverlay skipped");
 			return false;
 		}
 		isDrawingLocalServices = true;
 		
-		Log.i(TAG, "isDrawingLocalServices going ahead");
+		Log.i(TAG, "drawLocalServicesOverlay going ahead");
 		
-		ArrayList<LocalServiceItem> localServices = PlacesHandler.getLocalServices();
+		List<GPlace> localServices = GooglePlacesHandler.getLocalServices();
 		if (localServices == null || localServices.isEmpty())
 		{
 			Log.d(TAG, "localServices is null");
@@ -587,7 +588,6 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		return new GeoPoint((int) (l.getLatitude() * 1E6),
 		         (int) (l.getLongitude() * 1E6));
 	}
-	
 	
 	private void showShoutDialog() {
 		final EditText inputTextLayout = new EditText(this);
@@ -719,7 +719,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	    
 		@Override
 		protected Boolean doInBackground(MapSpan... params) {
-			return PlacesHandler.updateLocalServices(params[0].gp, params[0].latSpan, params[0].lonSpan);
+			return GooglePlacesHandler.updateLocalServices(params[0].gp, params[0].latSpan, params[0].lonSpan, "");
 		}
 		
 		@Override

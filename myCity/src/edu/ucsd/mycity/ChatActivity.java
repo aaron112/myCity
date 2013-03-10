@@ -119,7 +119,7 @@ public class ChatActivity extends Activity implements ChatClient {
 
 		// Initial chat room switch done when spinner initialized
 		buildChatList();
-		//switchChatRoom(mChatRoomID);
+		switchChatRoom(mChatRoomID);
 		//Log.d(TAG, "Initial chat room switch done.");
 		
 		// Set a listener to switch chat "window"

@@ -35,7 +35,9 @@ import edu.ucsd.mycity.listeners.ChatClient;
 import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.listeners.RosterClient;
+import edu.ucsd.mycity.localservices.LocalServiceItem;
 import edu.ucsd.mycity.utils.GPX;
+import edu.ucsd.mycity.utils.LocalServiceInvitation;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -430,8 +432,9 @@ public class GTalkHandler {
 		ArrayList<String> matchRes = GPX.parseGPX(chatContent);
 		
 		if (matchRes != null) {
-			Log.d(TAG, "matched GPX received from " + BuddyHandler.getBareAddr(message.getFrom()));
 			String bareAddr =  BuddyHandler.getBareAddr(message.getFrom());
+			Log.d(TAG, "matched GPX received from " + bareAddr);
+			
 			BuddyHandler.getBuddy( BuddyHandler.getBareAddr(message.getFrom()) ).setMyCityUser(true);
 			BuddyHandler.updateLocation( bareAddr, 
 										 Double.parseDouble(matchRes.get(0)),
@@ -443,6 +446,22 @@ public class GTalkHandler {
 		}
 		
 		return false;
+	}
+	
+	// Returns formatted invitation string if matched, null otherwise
+	public static String processLocalServiceInvitation(Message message) {
+		String chatContent = message.getBody();
+		HashMap<String, String> matchRes = LocalServiceInvitation.parseRequest(chatContent);
+		
+		if ( matchRes != null && matchRes.size() > 0 ) {
+			String bareAddr =  BuddyHandler.getBareAddr(message.getFrom());
+			Log.d(TAG, "matched local service inv received from " + bareAddr);
+			
+			String ret = "Let's meet here!\nPlace name: "+matchRes.get("name")+"\nAddress: "+matchRes.get("address")+"\nMessage: "+matchRes.get("msg");
+			return ret;
+		}
+		
+		return null;
 	}
 	
 	// bareAddr: null to probe all flagged users (Force Update)
@@ -507,6 +526,17 @@ public class GTalkHandler {
 		}
 		
 		return false;
+	}
+	
+	public static boolean sendLocalServiceInvitation(LocalServiceItem lsi, String bareAddr, String msg) {
+		Message message = new Message("", Message.Type.chat);
+		String req = LocalServiceInvitation.buildRequest(lsi.getName(), lsi.getAddress(), lsi.getLocation().getLatitudeE6(), lsi.getLocation().getLongitudeE6(), msg);
+		message.setBody( req );
+		
+		message.setTo( bareAddr );
+		mService.sendPacket(message);
+		
+		return true;
 	}
 	
 	public static Location getLastKnownLocation() {

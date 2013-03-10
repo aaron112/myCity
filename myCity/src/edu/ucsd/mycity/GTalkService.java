@@ -508,7 +508,7 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		
 		String fromAddr = BuddyHandler.getBareAddr(message.getFrom());
 		Log.d(TAG, "Text Recieved " + message.getBody() + " from " +  fromAddr);
-			
+		
 		// Process incoming message for XML Location
 		if ( GTalkHandler.processProbe(message) ) {
 			// Return the favor
@@ -520,11 +520,15 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 			return;		// Stop if parsed to be probe message
 		}
 		
-		GTalkHandler.processGPX(message);
-		// ----- ENDS HERE ----- ONLY CHECKS FOR PROBE OR GPX ------------------
-		
 		if ( GTalkHandler.processGPX(message) )
 			return;		// Stop if parsed to be GPX message
+		
+		boolean isChat = false;
+		String dispMsg = GTalkHandler.processLocalServiceInvitation(message);
+		if ( dispMsg == null ) {
+			dispMsg = message.getBody();
+			isChat = true;
+		}
 		
 		Log.d(TAG, "Going on to add chat.");
 		
@@ -532,9 +536,10 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		if ( (chatRoom = findChatRoom(chat)) == null )
 			chatRoom = createChatRoom(chat);
 		lastMsgFrom = chatRoom.getParticipant().getUser();
-		chatRoom.addMessage(chatRoom.getParticipant(), message.getBody());
+		chatRoom.addMessage(chatRoom.getParticipant(), dispMsg);
 		notifyChat(fromAddr);
-		makeChatNotification(fromAddr, message.getBody());
+		//if (isChat)
+			makeChatNotification(fromAddr, dispMsg);
 	}
 
 	@Override
