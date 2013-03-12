@@ -32,16 +32,10 @@ public class TestMap extends ActivityInstrumentationTestCase2<Map>
 	public void testMapUI()
 	{
 		boolean ok = getInstrumentation().invokeMenuActionSync(mActivity,
-		         edu.ucsd.mycity.R.id.menu_buddyList, 0);
+		         edu.ucsd.mycity.R.id.menu_closechat, 0);
 
 		getInstrumentation().waitForIdleSync();
-		assertTrue(ok);
-
-		ok = getInstrumentation().invokeMenuActionSync(mActivity,
-		         edu.ucsd.mycity.R.id.menu_chat, 0);
-
-		getInstrumentation().waitForIdleSync();
-		assertTrue(ok);
+		assertFalse(ok);
 
 		ok = getInstrumentation().invokeMenuActionSync(mActivity,
 		         edu.ucsd.mycity.R.id.menu_forceupdate, 0);
@@ -56,7 +50,7 @@ public class TestMap extends ActivityInstrumentationTestCase2<Map>
 		assertTrue(ok);
 
 		ok = getInstrumentation().invokeMenuActionSync(mActivity,
-		         edu.ucsd.mycity.R.id.menu_login, 0);
+		         edu.ucsd.mycity.R.id.menu_shout, 0);
 
 		getInstrumentation().waitForIdleSync();
 		assertTrue(ok);

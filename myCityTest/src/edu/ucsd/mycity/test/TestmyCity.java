@@ -9,11 +9,13 @@ public class TestmyCity
 	public static Test suite()
 	{
 		TestSuite suite = new TestSuite(TestmyCity.class.getName());
-		//$JUnit-BEGIN$
+		// $JUnit-BEGIN$
 		suite.addTestSuite(TestGPX.class);
 		suite.addTestSuite(TestGTalkService.class);
 		suite.addTestSuite(TestMap.class);
-		//$JUnit-END$
+		suite.addTestSuite(TestUserCont.class);
+		suite.addTestSuite(TestPlaces.class);
+		// $JUnit-END$
 		return suite;
 	}
 
