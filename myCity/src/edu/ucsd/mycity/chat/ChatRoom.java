@@ -13,6 +13,8 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import android.util.Log;
+
 import edu.ucsd.mycity.GTalkHandler;
 import edu.ucsd.mycity.buddy.BuddyEntry;
 
@@ -92,7 +94,9 @@ public class ChatRoom implements PacketListener, MessageListener {
 	
 	// Add a message to the message list
 	public void addMessage(BuddyEntry contact, String msg) {
+		Log.d("ChatRoom", "addMessage init.");
 		messages.add( new ChatMessage(contact, msg) );
+		Log.d("ChatRoom", "addMessage done.");
 	}
 	
 	public void setChat(Chat newsc) {

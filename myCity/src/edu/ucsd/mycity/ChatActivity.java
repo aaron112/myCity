@@ -119,6 +119,7 @@ public class ChatActivity extends Activity implements ChatClient {
 
 		// Initial chat room switch done when spinner initialized
 		buildChatList();
+		Log.d(TAG, "Initial chat room switch.");
 		switchChatRoom(mChatRoomID);
 		//Log.d(TAG, "Initial chat room switch done.");
 		
@@ -127,6 +128,8 @@ public class ChatActivity extends Activity implements ChatClient {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
 				//switchChatRoom( (String)parent.getSelectedItem() );
+				Log.d(TAG, "onItemSelected called.");
+				Log.i(TAG, "pos = "+pos+", chatIDs = "+chatIDs.toString());
 				switchChatRoom( chatIDs.get(pos) );
 			}
     	
@@ -254,8 +257,7 @@ public class ChatActivity extends Activity implements ChatClient {
 	    ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, chatTitles);
 	    spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    chating_with.setAdapter(spinnerArrayAdapter);
-	    // Update selection
-	    chating_with.setSelection( chatTitles.indexOf( mChatRoomID ), true);
+	    chating_with.setSelection( chatIDs.indexOf( mChatRoomID ), true);
 	}
 	
 	private void buildMsgList() {

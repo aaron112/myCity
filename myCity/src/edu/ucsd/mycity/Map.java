@@ -609,9 +609,16 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	        	//}
 	        	
 	        	// Make shout
-	        	if ( GTalkHandler.createMultiChatRoom(buddiesInRange, inputTextLayout.getText().toString().trim() ) ) {
+	        	String chatRoomID = GTalkHandler.createMultiChatRoom(buddiesInRange, inputTextLayout.getText().toString().trim() );
+	        	if ( chatRoomID != null && !chatRoomID.equals("") ) {
 	        		Toast.makeText(getApplicationContext(), "Shout sent successfully!", Toast.LENGTH_LONG).show();
-	        		// TODO: Open chat activity after invitation
+	        		// Open chat activity after invitation
+	        		Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+	    			Bundle b = new Bundle();
+	    			b.putString("contact", chatRoomID);
+	    			intent.putExtras(b);
+	    			startActivity(intent);
+	        		
 	        	} else {
 	        		Toast.makeText(getApplicationContext(), "Error when shouting. Check your connection.", Toast.LENGTH_LONG).show();
 	        	}

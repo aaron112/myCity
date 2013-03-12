@@ -16,7 +16,8 @@ public class MultiChat {
 		if (tagmatch.find()) {
 			matchedFrom = tagmatch.group().replaceFirst("<from>", "").replaceFirst("</from>", "");
 			res.add( 0, matchedFrom );
-			res.add( 1, tagmatch.group().replaceFirst("<from>" + matchedFrom + "</from>", "") );
+			
+			res.add( 1, input.replaceFirst("<from>" + matchedFrom + "</from>", "") );
 			return res;
 		}
 		

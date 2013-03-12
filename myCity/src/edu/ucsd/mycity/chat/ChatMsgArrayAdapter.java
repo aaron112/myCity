@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
+// ******* Used to implement custom listview
 public class ChatMsgArrayAdapter extends ArrayAdapter<ChatMessage> {
 	private final int textViewResourceId;
 	private boolean isMultiUser;

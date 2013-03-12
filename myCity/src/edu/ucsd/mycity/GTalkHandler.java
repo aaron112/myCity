@@ -26,6 +26,7 @@ import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smackx.Form;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import edu.ucsd.mycity.buddy.BuddyEntry;
@@ -339,17 +340,18 @@ public class GTalkHandler {
 		return false;
 	}
 	
-	// Multi-user mode
-	public static boolean createMultiChatRoom(ArrayList<BuddyEntry> buddies, String msg) {
+	// Multi-user mode, returns chat room ID
+	public static String createMultiChatRoom(ArrayList<BuddyEntry> buddies, String msg) {
 		if ( !isServiceStarted )
-			return false;
+			return "";
 		
 		UUID uid = UUID.randomUUID();
 		String chatRoomID = String.format("private-chat-%1s@%2s", uid, "groupchat.google.com");
 		MultiUserChat muc = new MultiUserChat(mService.getConnection(), chatRoomID);
+		
 		try {
+			muc.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
 			muc.join( GTalkHandler.getUserBareAddr() );
-			
 		} catch (XMPPException e) {
 			Log.e(TAG, "Error creating multi chat room: " + e.toString());
 		}
@@ -358,7 +360,9 @@ public class GTalkHandler {
 			muc.invite(buddy.getUser(), msg);
 		}
 		
-		return true;
+		ChatRoom chatRoom = mService.createChatRoom( muc, msg );
+		chatRoom.addMessage( null, msg );		// Adds first msg
+		return muc.getRoom();
 	}
 	
 	public static ChatRoom getChatRoom(String chatRoomName) {

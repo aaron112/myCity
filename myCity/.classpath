@@ -4,12 +4,12 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry exported="true" kind="lib" path="libs/asmack-2010.05.07.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-client-1.10.3-beta.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-api-client-android2-1.10.3-beta.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-http-client-1.10.3-beta.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/google-http-client-android2-1.10.3-beta.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/guava-11.0.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/jackson-core-asl-1.9.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/asmack-android-16-0.8.1.1.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
