@@ -18,6 +18,7 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.provider.ProviderManager;
+import org.jivesoftware.smackx.Form;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.provider.MUCUserProvider;
@@ -368,23 +369,25 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 	 * @param bareAddr
 	 * @param msg
 	 */
-	private void makeChatNotification(String bareAddr, String msg, int chattype) {
+	private void makeChatNotification(BuddyEntry buddy, String msg, int chattype, String multiChatRoomID) {
 		String type;
+
+        Log.i(TAG, "makeChatNotification init.");
 		
 		if ( chattype == CHAT_TYPE_SHOUT ) {
 			type = "shout";
 		} else {
 			type = "message";
+			multiChatRoomID = buddy.getUser();
 		}
 		
 		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
 		        .setSmallIcon(R.drawable.new_message_2, 3)
-		        .setContentTitle(bareAddr)
+		        .setContentTitle(buddy.getName())
 		        .setContentText(msg)
 		        .setContentInfo("myCity")
 		        .setSubText("Received from Google Talk")
-		        .setTicker("New "+type+" from "+
-		        		findChatRoom(bareAddr).getTitle()+"!")
+		        .setTicker("New "+type+" from "+buddy.getName()+"!")
 		        .setAutoCancel(true);
 		
 		// Make some noise!
@@ -396,7 +399,7 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		Intent resultIntent = new Intent(this, ChatActivity.class);
 		
     	Bundle b = new Bundle();
-    	b.putString("contact", bareAddr);
+    	b.putString("contact", multiChatRoomID);
     	resultIntent.putExtras(b);
 		
 		// The stack builder object will contain an artificial back stack for the
@@ -418,6 +421,8 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		// mId allows you to update the notification later on.
 		mNotificationManager.notify(1, mBuilder.build());
+
+        Log.i(TAG, "makeChatNotification done.");
 	}
 	
 	/**
@@ -487,28 +492,26 @@ public class GTalkService extends Service implements LocationListener, ChatManag
         Log.i(TAG, "Multi-chat invition received from: " + inviter);
         Log.i(TAG, "Invitation Reason: " + reason);
         
-        MultiUserChat muc = new MultiUserChat(conn, room);  
+        MultiUserChat muc = new MultiUserChat(conn, room);
         
         try {
             muc.join(GTalkHandler.getUserBareAddr(), password);  
+            //muc.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
         } catch (XMPPException e) {
-        	Log.e(TAG, "Unable to join chat room.");
+        	Log.e(TAG, "Unable to join chat room: " + e.toString() );
         	return;
         }
         
-        ChatRoom chatRoom = createChatRoom(muc, reason);		// Map reason to chat title
+        ChatRoom chatRoom = createChatRoom(muc, reason + " (Shout)");		// Map reason to chat title
 
-        Log.i(TAG, "Going to getBuddy.");
-        BuddyEntry buddy = BuddyHandler.getBuddy(inviter);
+        String bareAddr = BuddyHandler.getBareAddr(inviter);
+        BuddyEntry buddy = BuddyHandler.getBuddy(bareAddr);
         
-        Log.i(TAG, "Going to addMessage.");
-        //chatRoom.addMessage(buddy, reason);						// Add invite message as the first message
+        chatRoom.addMessage(buddy, reason);						// Add invite message as the first message
         
-        Log.i(TAG, "Going to makeChatNotification.");
-		makeChatNotification( buddy.getName(), reason, CHAT_TYPE_SHOUT );
+		makeChatNotification( buddy, reason, CHAT_TYPE_SHOUT, muc.getRoom() );
 
 		notifyChat(muc.getRoom());
-        muc.addMessageListener(this);
     }
 
 	@Override
@@ -551,13 +554,15 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		chatRoom.addMessage(chatRoom.getParticipant(), dispMsg);
 		notifyChat(fromAddr);
 		if (isChat)
-			makeChatNotification(fromAddr, dispMsg, CHAT_TYPE_CHAT);
+			makeChatNotification(chatRoom.getParticipant(), dispMsg, CHAT_TYPE_CHAT, "");
 	}
 
 	@Override
 	// ******* PacketListener *******
 	// NOTE: For multi-user chat only
 	public void processPacket(Packet packet) {
+		Log.d(TAG, "Incoming packet... (multi)");
+		
 		Message message = (Message) packet;
 		
 		if (message.getBody() == null)
@@ -570,12 +575,22 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		
 		// Try to parse from addr
 		ArrayList<String> matchres = MultiChat.parseFrom(message.getBody());
-		lastMsgFrom = fromAddr;	// Chat room address
+		// Ignore if sent from myself
+		if ( matchres.get(0).equals(GTalkHandler.getUserBareAddr()) ) {
+			Log.d(TAG, "Loopback message discarded.");
+			return;
+		}
 		
 		BuddyEntry buddy = BuddyHandler.getBuddy( matchres.get(0) );
+		if (buddy == null)
+			buddy = new BuddyEntry("", "", null);		// TODO: DEBUG only.. make up a fake user
+
+		Log.d(TAG, "Group Text Recieved " + message.getBody() + " from " + matchres.get(0) + "("+fromAddr+")");
 		
 		chatRoom.addMessage( buddy, matchres.get(1) );
-		makeChatNotification( buddy.getName(), matchres.get(1), CHAT_TYPE_CHAT );
+		makeChatNotification( buddy, matchres.get(1), CHAT_TYPE_CHAT, "" );
+
+		lastMsgFrom = fromAddr;	// Chat room address
 		
 		notifyChat(fromAddr);
 	}
@@ -604,6 +619,10 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		// Multi-user mode based on pre-created muc
 		Log.d(TAG, "createChatRoom (MUC) called: " + title);
 		chatsList.put(muc.getRoom(), new ChatRoom(muc, title));
+		
+		Log.i(TAG, "addMessageListener...");
+		muc.addMessageListener( GTalkService.this );
+		
 		return chatsList.get(muc.getRoom());
 	}
 

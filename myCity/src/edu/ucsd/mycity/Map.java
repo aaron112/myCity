@@ -611,7 +611,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	        	// Make shout
 	        	String chatRoomID = GTalkHandler.createMultiChatRoom(buddiesInRange, inputTextLayout.getText().toString().trim() );
 	        	if ( chatRoomID != null && !chatRoomID.equals("") ) {
-	        		Toast.makeText(getApplicationContext(), "Shout sent successfully!", Toast.LENGTH_LONG).show();
+	        		//Toast.makeText(getApplicationContext(), "Shout sent successfully!", Toast.LENGTH_LONG).show();
 	        		// Open chat activity after invitation
 	        		Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
 	    			Bundle b = new Bundle();
@@ -668,7 +668,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	    protected void onPreExecute() {
 	    	// update the UI immediately after the task is executed
 	    	super.onPreExecute();
-	    	Toast.makeText(getApplicationContext(), "Loading user contents...", Toast.LENGTH_SHORT).show();
+	    	//Toast.makeText(getApplicationContext(), "Loading user contents...", Toast.LENGTH_SHORT).show();
 	    }
 	    
 		@Override
@@ -721,7 +721,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	    protected void onPreExecute() {
 	    	// update the UI immediately after the task is executed
 	    	super.onPreExecute();
-	    	Toast.makeText(getApplicationContext(), "Loading local services...", Toast.LENGTH_SHORT).show();
+	    	//Toast.makeText(getApplicationContext(), "Loading local services...", Toast.LENGTH_SHORT).show();
 	    }
 	    
 		@Override
@@ -738,7 +738,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 		protected void onPostExecute(Boolean res) {
 			super.onPostExecute(res);
 
-			Toast.makeText(getApplicationContext(), "Done loading local services.", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(getApplicationContext(), "Done loading local services.", Toast.LENGTH_SHORT).show();
 			Log.d(TAG, "Done loading!");
 			
 			if (res)

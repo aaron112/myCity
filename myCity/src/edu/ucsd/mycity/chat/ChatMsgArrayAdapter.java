@@ -30,8 +30,6 @@ public class ChatMsgArrayAdapter extends ArrayAdapter<ChatMessage> {
 	
 	@Override
     public View getView(int position, View convertView, ViewGroup parent) {
-		Log.d("ChatMsgArrayAdapter", "getView!!");
-
         View rowView = super.getView(position, convertView, parent);
         
 		ChatMessage chatmsg = (ChatMessage) super.getItem(position);

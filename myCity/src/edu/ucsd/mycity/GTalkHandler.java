@@ -356,12 +356,10 @@ public class GTalkHandler {
 			Log.e(TAG, "Error creating multi chat room: " + e.toString());
 		}
 		
-		for ( BuddyEntry buddy : buddies ) {
-			muc.invite(buddy.getUser(), msg);
-		}
-		
-		ChatRoom chatRoom = mService.createChatRoom( muc, msg );
+		ChatRoom chatRoom = mService.createChatRoom( muc, msg + " (Shout)" );
+		chatRoom.addParticipants( buddies, msg );
 		chatRoom.addMessage( null, msg );		// Adds first msg
+		
 		return muc.getRoom();
 	}
 	

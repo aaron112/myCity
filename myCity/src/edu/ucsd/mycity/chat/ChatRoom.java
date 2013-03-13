@@ -71,11 +71,6 @@ public class ChatRoom implements PacketListener, MessageListener {
 	public ChatRoom(MultiUserChat newmuc, String title) {
 		isMultiUser = true;
 		muc = newmuc;
-		//try {
-		//	muc.join( GTalkHandler.getUserBareAddr() );
-		//} catch (XMPPException e) {
-		//	Log.e("ChatRoom", "Error in create room: "+e.toString());
-		//}
 		
 		muc.addMessageListener(this);
 		this.title = title;
@@ -94,9 +89,7 @@ public class ChatRoom implements PacketListener, MessageListener {
 	
 	// Add a message to the message list
 	public void addMessage(BuddyEntry contact, String msg) {
-		Log.d("ChatRoom", "addMessage init.");
 		messages.add( new ChatMessage(contact, msg) );
-		Log.d("ChatRoom", "addMessage done.");
 	}
 	
 	public void setChat(Chat newsc) {
@@ -119,6 +112,7 @@ public class ChatRoom implements PacketListener, MessageListener {
 		
 		if ( isMultiUser ) {
 			try {
+				Log.i("ChatRoom", "groupchat sendMessage: "+message);
 				muc.sendMessage("<from>"+GTalkHandler.getUserBareAddr()+"</from>"+message);
 			} catch (XMPPException e) {
 				return false;
@@ -166,8 +160,10 @@ public class ChatRoom implements PacketListener, MessageListener {
 		if ( !isMultiUser || muc == null )
 			return false;
 		
-		for ( BuddyEntry buddy : buddies )
+		for ( BuddyEntry buddy : buddies ) {
+			addMessage(null, "Inviting: " + buddy.getUser());
 			muc.invite(buddy.getUser(), invitemsg);
+		}
 		
 		return true;
 	}
