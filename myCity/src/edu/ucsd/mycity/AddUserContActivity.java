@@ -78,12 +78,6 @@ public class AddUserContActivity extends Activity
 
 			public void onClick(View v)
 			{
-
-				/*
-				 * if (picPath != null) try { postPic(picPath); picPath = null; }
-				 * catch (Exception e) { // TODO Auto-generated catch block
-				 * Log.d(TAG, e.toString()); }
-				 */
 				postdata(picPath);
 			}
 		});

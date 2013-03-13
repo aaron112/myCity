@@ -87,35 +87,28 @@ public class ChatActivity extends Activity implements ChatClient {
 		
 		buildChatList();
 		
-		if ( mode == CHAT_MODE_SINGLE ) {
-			// Single chat:
+		if ( mChatRoomID == null || mChatRoomID.equals("") ) {
+			Log.d(TAG, "getLastMsgFrom");
+			mChatRoomID = GTalkHandler.getLastMsgFrom();
+			
 			if ( mChatRoomID == null || mChatRoomID.equals("") ) {
-				Log.d(TAG, "getLastMsgFrom");
-				mChatRoomID = GTalkHandler.getLastMsgFrom();
-				
-				if ( mChatRoomID == null || mChatRoomID.equals("") ) {
-					if ( chatRooms.isEmpty() ) {
-						Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
-						Toast.makeText(this, "Start a new conversation from Map or Contact List",
-								Toast.LENGTH_SHORT).show();
-						finish();
-					} else {
-						Log.d(TAG, "Falling back to the first conversation on list.");
-						mChatRoomID = chatRooms.keySet().iterator().next();
-					}
+				if ( chatRooms.isEmpty() ) {
+					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
+					Toast.makeText(this, "Start a new conversation from Map or Contact List",
+							Toast.LENGTH_SHORT).show();
+					finish();
+				} else {
+					Log.d(TAG, "Falling back to the first conversation on list.");
+					mChatRoomID = chatRooms.keySet().iterator().next();
 				}
 			}
-			
+		}
 
-			// If chat room does not exist, create it
-			if ( !chatRooms.containsKey(mChatRoomID) ) {
-				Log.d(TAG, "Chat room does not exist, asking GTalkHandler to create it.");
-				GTalkHandler.createChatRoom(mChatRoomID);
-			}
-		} else {
-			// TODO: start with multi chat
-			Log.d(TAG, "Starting with Multi user mode.");
-		}	
+		// If chat room does not exist, create it
+		if ( !chatRooms.containsKey(mChatRoomID) ) {
+			Log.d(TAG, "Chat room does not exist, asking GTalkHandler to create it.");
+			GTalkHandler.createChatRoom(mChatRoomID);
+		}
 
 		// Initial chat room switch done when spinner initialized
 		buildChatList();

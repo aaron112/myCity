@@ -538,11 +538,11 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		if ( GTalkHandler.processGPX(message) )
 			return;		// Stop if parsed to be GPX message
 		
-		boolean isChat = false;
+		//boolean isChat = false;
 		String dispMsg = GTalkHandler.processLocalServiceInvitation(message);
 		if ( dispMsg == null ) {
 			dispMsg = message.getBody();
-			isChat = true;
+			//isChat = true;
 		}
 		
 		Log.d(TAG, "Going on to add chat.");
@@ -553,7 +553,7 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		lastMsgFrom = chatRoom.getParticipant().getUser();
 		chatRoom.addMessage(chatRoom.getParticipant(), dispMsg);
 		notifyChat(fromAddr);
-		if (isChat)
+		//if (isChat)
 			makeChatNotification(chatRoom.getParticipant(), dispMsg, CHAT_TYPE_CHAT, "");
 	}
 

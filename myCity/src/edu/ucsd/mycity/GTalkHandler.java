@@ -459,7 +459,7 @@ public class GTalkHandler {
 			String bareAddr =  BuddyHandler.getBareAddr(message.getFrom());
 			Log.d(TAG, "matched local service inv received from " + bareAddr);
 			
-			String ret = "Let's meet here!\nPlace name: "+matchRes.get("name")+"\nAddress: "+matchRes.get("address")+"\nMessage: "+matchRes.get("msg");
+			String ret = "Let's meet here!\nPlace name: "+matchRes.get("name")+"\nAddress: "+matchRes.get("address")+"\nPhone:"+matchRes.get("phone")+"\nMessage: "+matchRes.get("msg");
 			return ret;
 		}
 		
@@ -532,7 +532,7 @@ public class GTalkHandler {
 	
 	public static boolean sendLocalServiceInvitation(LocalServiceItem lsi, String bareAddr, String msg) {
 		Message message = new Message("", Message.Type.chat);
-		String req = LocalServiceInvitation.buildRequest(lsi.getName(), lsi.getAddress(), lsi.getLocation().getLatitudeE6(), lsi.getLocation().getLongitudeE6(), msg);
+		String req = LocalServiceInvitation.buildRequest(lsi.getName(), lsi.getAddress(), lsi.getPhone(), lsi.getLocation().getLatitudeE6(), lsi.getLocation().getLongitudeE6(), msg);
 		message.setBody( req );
 		
 		message.setTo( bareAddr );

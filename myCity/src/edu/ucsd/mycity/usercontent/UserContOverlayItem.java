@@ -22,7 +22,6 @@ public class UserContOverlayItem extends OverlayItem
 	{
 		super(entry.getLocation(), entry.getName(), entry.getDescription());
 		this.entry = entry;
-		// TODO Auto-generated constructor stub
 	}
 
 	public UserContEntry getEntry()

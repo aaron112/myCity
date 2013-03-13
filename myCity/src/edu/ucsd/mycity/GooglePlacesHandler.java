@@ -19,6 +19,7 @@ import com.google.api.client.http.json.JsonHttpParser;
 import com.google.api.client.json.jackson.JacksonFactory;
 
 import edu.ucsd.mycity.localservices.GPlace;
+import edu.ucsd.mycity.localservices.GPlaceDetails;
 import edu.ucsd.mycity.localservices.GPlaceList;
 
 @SuppressWarnings("deprecation")
@@ -26,7 +27,8 @@ public class GooglePlacesHandler {
 	private final static String TAG = "GooglePlacesHandler";
 	private final static String API_KEY = "AIzaSyAub7JvkLSud0aJVeZbRlgrFtQRupkqgos";
 	private static final String PLACES_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/search/json?";
-	
+	private static final String PLACES_DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
+	 
 	/** Global instance of the HTTP transport. */
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
@@ -72,8 +74,6 @@ public class GooglePlacesHandler {
                 request.getUrl().put("types", types);
             
     		placesList = request.execute().parseAs(GPlaceList.class);
-            // Check log cat for places response status
-            Log.d(TAG, "" + placesList.status);
         } catch (HttpResponseException e) {
             Log.e(TAG, "Error: " + e.getMessage());
             return false;
@@ -85,13 +85,40 @@ public class GooglePlacesHandler {
     }
 	
 	/**
+     * Searching single place full details
+     * @param refrence - reference id of place
+     *                 - which you will get in search api request
+     * */
+    public static GPlaceDetails getPlaceDetails(String reference) throws Exception {
+    	Log.d(TAG, "getPlaceDetails for ref ID: " + reference);
+    	
+        try {
+ 
+            HttpRequestFactory httpRequestFactory = createRequestFactory(HTTP_TRANSPORT);
+            HttpRequest request = httpRequestFactory
+                    .buildGetRequest(new GenericUrl(PLACES_DETAILS_URL));
+            request.getUrl().put("key", API_KEY);
+            request.getUrl().put("reference", reference);
+            request.getUrl().put("sensor", "false");
+ 
+            GPlaceDetails place = request.execute().parseAs(GPlaceDetails.class);
+ 
+            return place;
+ 
+        } catch (HttpResponseException e) {
+            Log.e(TAG, "Error in Perform Details: " + e.getMessage());
+            throw e;
+        }
+    }
+	
+	/**
      * Creating http request Factory
      * */
     public static HttpRequestFactory createRequestFactory(final HttpTransport transport) {
         return transport.createRequestFactory(new HttpRequestInitializer() {
             public void initialize(HttpRequest request) {
                 GoogleHeaders headers = new GoogleHeaders();
-                headers.setApplicationName("AndroidHive-Places-Test");
+                headers.setApplicationName("My City");
                 request.setHeaders(headers);
                 JsonHttpParser parser = new JsonHttpParser(new JacksonFactory());
                 request.addParser(parser);

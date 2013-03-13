@@ -52,6 +52,7 @@ import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.listeners.RosterClient;
 import edu.ucsd.mycity.localservices.GPlace;
+import edu.ucsd.mycity.localservices.GPlaceDetails;
 import edu.ucsd.mycity.localservices.LocalServiceItem;
 import edu.ucsd.mycity.localservices.LocalServiceOverlayItem;
 import edu.ucsd.mycity.localservices.LocalServicePinsOverlay;
@@ -673,7 +674,7 @@ public class Map extends MapActivity implements RosterClient, LocationClient,
 	    
 		@Override
 		protected Boolean doInBackground(MapSpan... params) {
-			// TODO: Implement MapSpan
+			// TODO: Implement MapSpan and "buddies only"
 			return UserContHandler.updateContent();
 		}
 		

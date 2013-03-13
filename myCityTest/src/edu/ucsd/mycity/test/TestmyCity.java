@@ -15,6 +15,7 @@ public class TestmyCity
 		suite.addTestSuite(TestMap.class);
 		suite.addTestSuite(TestUserCont.class);
 		suite.addTestSuite(TestPlaces.class);
+		suite.addTestSuite(TestLocalServiceInvitation.class);
 		// $JUnit-END$
 		return suite;
 	}

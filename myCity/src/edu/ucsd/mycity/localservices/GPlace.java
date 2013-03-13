@@ -9,7 +9,6 @@ public class GPlace extends LocalServiceItem {
 	public GPlace(ArrayList<String> types, String name, String phone,
 			String address, GeoPoint location) {
 		super(types, name, phone, address, location);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public GPlace() {
@@ -77,5 +76,10 @@ public class GPlace extends LocalServiceItem {
 	@Override
 	public GeoPoint getLocation() {
 		return new GeoPoint( (int)(this.geometry.location.lat* 1E6), (int)(this.geometry.location.lng* 1E6));
+	}
+
+	@Override
+	public String getRef() {
+		return this.reference;
 	}
 }

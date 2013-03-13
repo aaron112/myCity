@@ -15,7 +15,6 @@ public class LocalServiceOverlayItem extends OverlayItem
 	{
 		super(item.getLocation(), item.getName(), item.getAddress());
 		this.item = item;
-		// TODO Auto-generated constructor stub
 	}
 
 	public LocalServiceItem getItem()

@@ -5,11 +5,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LocalServiceInvitation {
-	// Pattern: <locinv name="" address="" lat="" lon=""><msg></msg></locinv>
+	// Pattern: <locinv name="" address="" phone="" lat="" lon=""><msg></msg></locinv>
 	
 	private static final Pattern locinvtag = Pattern.compile("<locinv\\b[^>]*name=\"[^>]*>");
 	private static final Pattern name = Pattern.compile("name=\"[^>]*?\"");
 	private static final Pattern address = Pattern.compile("address=\"[^>]*?\"");
+	private static final Pattern phone = Pattern.compile("phone=\"[^>]*?\"");
 	private static final Pattern lat = Pattern.compile("lat=\"[^>]*?\"");
 	private static final Pattern lon = Pattern.compile("lon=\"[^>]*?\"");
 	private static final Pattern msgtag = Pattern.compile("<msg>[^>]*</msg>");
@@ -26,6 +27,10 @@ public class LocalServiceInvitation {
 			matcher = address.matcher(tagmatch.group());
 			matcher.find();
 			res.put( "address", matcher.group().replaceFirst("address=\"", "").replaceFirst("\"", "") );
+
+			matcher = phone.matcher(tagmatch.group());
+			matcher.find();
+			res.put( "phone", matcher.group().replaceFirst("phone=\"", "").replaceFirst("\"", "") );
 			
 			matcher = lat.matcher(tagmatch.group());
 			matcher.find();
@@ -48,13 +53,10 @@ public class LocalServiceInvitation {
 		return res;
 	}
 	
-	public static String buildRequest(String name, String address, int lat, int lon, String msg) {
+	public static String buildRequest(String name, String address, String phone, int lat, int lon, String msg) {
 		// Pattern: <locinv name="" address="" lat="" lon=""><msg></msg></locinv>
-		String res = "<locinv name=\""+name+"\" address=\""+address+"\" lat=\""+lat+"\" lon=\""+lon+"\"><msg>"+msg+"</msg></locinv>";
+		String res = "<locinv name=\""+name+"\" address=\""+address+"\" phone=\""+phone+"\" lat=\""+lat+"\" lon=\""+lon+"\"><msg>"+msg+"</msg></locinv>";
 		
 		return res;
 	}
-	
-	
-
 }

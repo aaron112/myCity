@@ -67,6 +67,9 @@ public class LocalServiceItem implements Parcelable {
 		this.location = location;
 	}
 	
+	public String getRef() {
+		return "";
+	}
 	// ------------ Start Parcelable --------------
 
 	@Override

@@ -32,7 +32,6 @@ public class UserContPinsOverlay extends PinsOverlay
 	{
 		super(defaultMarker, mapView);
 		mContext = mapView.getContext();
-		// TODO Auto-generated constructor stub
 	}
 
 	protected boolean onBalloonTap(int index, OverlayItem item)
@@ -49,7 +48,7 @@ public class UserContPinsOverlay extends PinsOverlay
 		Bundle bundle = new Bundle();
 		bundle.putParcelable("UserContEntry", user_item.getEntry());
 		i.putExtras(bundle);
-
+		
 		mContext.startActivity(i);
 
 		Log.d(TAG, "showing user content onBalloonTap");
