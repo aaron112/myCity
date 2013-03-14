@@ -31,6 +31,13 @@
         android:text="TextView"
         android:textSize="14dp" />
 
+    <TextView
+        android:id="@+id/visibilityView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView" 
+        android:textSize="14dp" />/>
+
     <ImageView
         android:id="@+id/showImage"
         android:adjustViewBounds="true"
