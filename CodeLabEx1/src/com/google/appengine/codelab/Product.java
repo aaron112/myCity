@@ -23,10 +23,12 @@ public class Product
 	 * @param description
 	 *           : description
 	 * @param picKey
+	 * @param visibility
 	 * @return updated product
 	 */
 	public static void createOrUpdateProduct(String user, String name,
-	         String description, String lat, String longi, String picKey)
+	         String description, String lat, String longi, String picKey,
+	         String visibility)
 	{
 		Entity product = getProduct(name);
 		if (product == null)
@@ -37,6 +39,7 @@ public class Product
 			product.setProperty("latitude", lat);
 			product.setProperty("longitude", longi);
 			product.setProperty("picKey", picKey);
+			product.setProperty("public", visibility);
 		}
 		else
 		{
@@ -44,6 +47,7 @@ public class Product
 			product.setProperty("latitude", lat);
 			product.setProperty("longitude", longi);
 			product.setProperty("picKey", picKey);
+			product.setProperty("public", visibility);
 		}
 		Util.persistEntity(product);
 	}

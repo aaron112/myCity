@@ -15,15 +15,17 @@ public class UserContEntry implements Parcelable
 	private GeoPoint location;
 	private String description;
 	private String picKey;
+	private String visibility;
 
 	public UserContEntry(String user, String name, String description,
-	         GeoPoint gp, String picKey)
+	         GeoPoint gp, String picKey, String visibility)
 	{
 		this.user = user;
 		this.name = name;
 		this.location = gp;
 		this.description = description;
 		this.picKey = picKey;
+		this.visibility = visibility;
 	}
 
 	public String getName()
@@ -51,44 +53,60 @@ public class UserContEntry implements Parcelable
 		return this.picKey;
 	}
 
+	public String getVisibility()
+	{
+		return this.visibility;
+	}
+
 	// ------------ Start Parcelable --------------
 
 	@Override
-	public int describeContents() {
+	public int describeContents()
+	{
 		return 0;
 	}
 
 	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		//private String user;
-		//private String name;
-		//private GeoPoint location;
-		//private String description;
-		//private String picKey;
+	public void writeToParcel(Parcel dest, int flags)
+	{
+		// private String user;
+		// private String name;
+		// private GeoPoint location;
+		// private String description;
+		// private String picKey;
 
 		dest.writeString(user);
 		dest.writeString(name);
-		dest.writeParcelable( new ParcelableGeoPoint(location), flags );
+		dest.writeParcelable(new ParcelableGeoPoint(location), flags);
 		dest.writeString(description);
 		dest.writeString(picKey);
+		dest.writeString(visibility);
+
 	}
-    
-    public UserContEntry(Parcel in) {
-    	// Read from parcel
-    	this.user = in.readString();
-    	this.name = in.readString();
-    	this.location = ((ParcelableGeoPoint) in.readParcelable( ParcelableGeoPoint.class.getClassLoader() )).getGeoPoint();
-    	this.description = in.readString();
-    	this.picKey = in.readString();
-    }
-    
-    public static final Parcelable.Creator<UserContEntry> CREATOR = new Parcelable.Creator<UserContEntry>() {
-		public UserContEntry createFromParcel(Parcel in) {
-		    return new UserContEntry(in);
+
+	public UserContEntry(Parcel in)
+	{
+		// Read from parcel
+		this.user = in.readString();
+		this.name = in.readString();
+		this.location = ((ParcelableGeoPoint) in
+		         .readParcelable(ParcelableGeoPoint.class.getClassLoader()))
+		         .getGeoPoint();
+		this.description = in.readString();
+		this.picKey = in.readString();
+		this.visibility = in.readString();
+	}
+
+	public static final Parcelable.Creator<UserContEntry> CREATOR = new Parcelable.Creator<UserContEntry>()
+	{
+		public UserContEntry createFromParcel(Parcel in)
+		{
+			return new UserContEntry(in);
 		}
-		
-		public UserContEntry[] newArray(int size) {
-		    return new UserContEntry[size];
+
+		public UserContEntry[] newArray(int size)
+		{
+			return new UserContEntry[size];
 		}
 	};
 }

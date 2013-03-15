@@ -1,14 +1,7 @@
 package edu.ucsd.mycity;
 
-import java.util.ArrayList;
-
-import edu.ucsd.mycity.buddy.BuddyEntry;
-import edu.ucsd.mycity.localservices.LocalServiceItem;
-import edu.ucsd.mycity.usercontent.UserContEntry;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
@@ -17,11 +10,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+import edu.ucsd.mycity.usercontent.UserContEntry;
 
 public class ShowUserContActivity extends Activity
 {
@@ -31,125 +23,155 @@ public class ShowUserContActivity extends Activity
 	private TextView creatorView;
 	private ImageView mImageView;
 	private ProgressDialog dialog;
+	private TextView visibilityView;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		
+	protected void onCreate(Bundle savedInstanceState)
+	{
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_show_user_cont);
 
 		Bundle b = getIntent().getExtras();
 		UserContEntry entry = (UserContEntry) b.getParcelable("UserContEntry");
-		
+
 		name = (TextView) findViewById(R.id.nameView);
-		name.setText( entry.getName() );
+		name.setText(entry.getName());
 
 		description = (TextView) findViewById(R.id.descriptionView);
-		description.setText( entry.getDescription() );
-		
-		creatorView = (TextView) findViewById(R.id.creatorView);
-		creatorView.setText( "Created by: " + entry.getUser() );
-		
-		mImageView = (ImageView) findViewById(R.id.showImage);
-    	mImageView.setImageBitmap(null);
+		description.setText(entry.getDescription());
 
-    	if ( !entry.getPicKey().equals("") ) {
-    		dialog = ProgressDialog.show(this, "Downloading image...", "Please wait...", false);
-    		new DownloadImageAsyncTask().execute( entry.getPicKey() );
-    	}
+		creatorView = (TextView) findViewById(R.id.creatorView);
+		creatorView.setText("Created by: " + entry.getUser());
+
+		mImageView = (ImageView) findViewById(R.id.showImage);
+		mImageView.setImageBitmap(null);
+
+		visibilityView = (TextView) findViewById(R.id.visibilityView);
+
+		if (entry.getVisibility().equals("private"))
+			visibilityView.setText("This content is private");
+
+		else if (entry.getVisibility().equals("buddies"))
+			visibilityView.setText("This content is avaliable to buddies");
+
+		else
+			visibilityView.setText("This content is public");
+
+		if (!entry.getPicKey().equals(""))
+		{
+			dialog = ProgressDialog.show(this, "Downloading image...",
+			         "Please wait...", false);
+			new DownloadImageAsyncTask().execute(entry.getPicKey());
+		}
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.load_user_cont, menu);
 		return true;
 	}
-	
-	private class DownloadImageAsyncTask extends AsyncTask<String, Integer, Bitmap>{
-	    @Override
-	    protected void onPreExecute() {
-	    	// update the UI immediately after the task is executed
-	    	super.onPreExecute();
-	    	//Toast.makeText(getApplicationContext(), "Downloading Image...", Toast.LENGTH_SHORT).show();
-	    }
-	    
+
+	private class DownloadImageAsyncTask extends
+	         AsyncTask<String, Integer, Bitmap>
+	{
 		@Override
-		protected Bitmap doInBackground(String... params) {
+		protected void onPreExecute()
+		{
+			// update the UI immediately after the task is executed
+			super.onPreExecute();
+			// Toast.makeText(getApplicationContext(), "Downloading Image...",
+			// Toast.LENGTH_SHORT).show();
+		}
+
+		@Override
+		protected Bitmap doInBackground(String... params)
+		{
 			return UserContHandler.getImageFromWeb(params[0]);
 		}
-		
+
 		@Override
-		protected void onProgressUpdate(Integer... values) {
+		protected void onProgressUpdate(Integer... values)
+		{
 			super.onProgressUpdate(values);
 		}
-		
+
 		@Override
-		protected void onPostExecute(Bitmap resBitmap) {
+		protected void onPostExecute(Bitmap resBitmap)
+		{
 			super.onPostExecute(resBitmap);
-			
-			//Toast.makeText(getApplicationContext(), "Done downloading!", Toast.LENGTH_SHORT).show();
+
+			// Toast.makeText(getApplicationContext(), "Done downloading!",
+			// Toast.LENGTH_SHORT).show();
 			Log.d(TAG, "Done Downloading!");
-			
+
 			scaleImage(mImageView, resBitmap);
 			dialog.dismiss();
 		}
-		
+
 		@SuppressWarnings("deprecation")
-		private void scaleImage(ImageView view, Bitmap bitmap) {
+		private void scaleImage(ImageView view, Bitmap bitmap)
+		{
 			String TAG = "scaleImage";
-		    // Get current dimensions AND the desired bounding box
-		    int width = bitmap.getWidth();
-		    int height = bitmap.getHeight();
-		    Display display = getWindowManager().getDefaultDisplay();
-		    int bounding = display.getWidth(); 
-		    
-		    //int bounding = dpToPx(R.layout.activity_load_user_cont);
-		    Log.i(TAG, "original width = " + Integer.toString(width));
-		    Log.i(TAG, "original height = " + Integer.toString(height));
-		    Log.i(TAG, "bounding = " + Integer.toString(bounding));
+			// Get current dimensions AND the desired bounding box
+			int width = bitmap.getWidth();
+			int height = bitmap.getHeight();
+			Display display = getWindowManager().getDefaultDisplay();
+			int bounding = display.getWidth();
 
-		    // Determine how much to scale: the dimension requiring less scaling is
-		    // closer to the its side. This way the image always stays inside your
-		    // bounding box AND either x/y axis touches it.  
-		    float xScale = ((float) bounding) / width;
-		    float yScale = ((float) bounding) / height;
-		    float scale = (xScale <= yScale) ? xScale : yScale;
-		    Log.i(TAG, "xScale = " + Float.toString(xScale));
-		    Log.i(TAG, "yScale = " + Float.toString(yScale));
-		    Log.i(TAG, "scale = " + Float.toString(scale));
+			// int bounding = dpToPx(R.layout.activity_load_user_cont);
+			Log.i(TAG, "original width = " + Integer.toString(width));
+			Log.i(TAG, "original height = " + Integer.toString(height));
+			Log.i(TAG, "bounding = " + Integer.toString(bounding));
 
-		    // Create a matrix for the scaling and add the scaling data
-		    Matrix matrix = new Matrix();
-		    matrix.postScale(scale, scale);
+			// Determine how much to scale: the dimension requiring less scaling is
+			// closer to the its side. This way the image always stays inside your
+			// bounding box AND either x/y axis touches it.
+			float xScale = ((float) bounding) / width;
+			float yScale = ((float) bounding) / height;
+			float scale = (xScale <= yScale) ? xScale : yScale;
+			Log.i(TAG, "xScale = " + Float.toString(xScale));
+			Log.i(TAG, "yScale = " + Float.toString(yScale));
+			Log.i(TAG, "scale = " + Float.toString(scale));
 
-		    // Create a new bitmap and convert it to a format understood by the ImageView 
-		    Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
-		    width = scaledBitmap.getWidth(); // re-use
-		    height = scaledBitmap.getHeight(); // re-use
+			// Create a matrix for the scaling and add the scaling data
+			Matrix matrix = new Matrix();
+			matrix.postScale(scale, scale);
+
+			// Create a new bitmap and convert it to a format understood by the
+			// ImageView
+			Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height,
+			         matrix, true);
+			width = scaledBitmap.getWidth(); // re-use
+			height = scaledBitmap.getHeight(); // re-use
 			BitmapDrawable result = new BitmapDrawable(scaledBitmap);
-		    //mImageView.setImageBitmap(Bitmap.createScaledBitmap(bitmap, mImageView.getWidth(), mImageView.getHeight(), false));
-		    
-		    //BitmapDrawable result = new BitmapDrawable(scaledBitmap);
-		    Log.i(TAG, "scaled width = " + Integer.toString(width));
-		    Log.i(TAG, "scaled height = " + Integer.toString(height));
+			// mImageView.setImageBitmap(Bitmap.createScaledBitmap(bitmap,
+			// mImageView.getWidth(), mImageView.getHeight(), false));
 
-		    // Apply the scaled bitmap
-		    view.setImageDrawable(result);
+			// BitmapDrawable result = new BitmapDrawable(scaledBitmap);
+			Log.i(TAG, "scaled width = " + Integer.toString(width));
+			Log.i(TAG, "scaled height = " + Integer.toString(height));
 
-		    // Now change ImageView's dimensions to match the scaled image
-		    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) view.getLayoutParams(); 
-		    params.width = width;
-		    params.height = height;
-		    view.setLayoutParams(params);
+			// Apply the scaled bitmap
+			view.setImageDrawable(result);
 
-		    Log.i(TAG, "done");
+			// Now change ImageView's dimensions to match the scaled image
+			LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) view
+			         .getLayoutParams();
+			params.width = width;
+			params.height = height;
+			view.setLayoutParams(params);
+
+			Log.i(TAG, "done");
 		}
 
-		//private int dpToPx(int dp)
-		//{
-		//    float density = getApplicationContext().getResources().getDisplayMetrics().density;
-		//    return Math.round((float)dp * density);
-		//}
+		// private int dpToPx(int dp)
+		// {
+		// float density =
+		// getApplicationContext().getResources().getDisplayMetrics().density;
+		// return Math.round((float)dp * density);
+		// }
 	}
 }

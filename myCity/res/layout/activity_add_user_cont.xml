@@ -43,6 +43,11 @@
             android:layout_height="wrap_content"
             android:text="Load Picture" />
 
+        <Spinner
+            android:id="@+id/visibilitySpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
         <Button
             android:id="@+id/submit_btn"
             android:layout_width="match_parent"
