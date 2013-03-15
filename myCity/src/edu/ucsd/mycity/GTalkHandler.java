@@ -38,6 +38,7 @@ import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.listeners.RosterClient;
 import edu.ucsd.mycity.localservices.LocalServiceItem;
 import edu.ucsd.mycity.utils.GPX;
+import edu.ucsd.mycity.utils.GroupChatInvitation;
 import edu.ucsd.mycity.utils.LocalServiceInvitation;
 
 import android.content.ComponentName;
@@ -363,6 +364,13 @@ public class GTalkHandler {
 		return muc.getRoom();
 	}
 	
+	public static boolean removeFromChatsList(String chatRoomID) {
+		if ( !isServiceStarted )
+			return false;
+		
+		return mService.removeFromChatsList(chatRoomID);
+	}
+	
 	public static ChatRoom getChatRoom(String chatRoomName) {
 		Log.d(TAG, "getChatRoom with "+ chatRoomName);
 		if ( isServiceStarted )
@@ -450,6 +458,25 @@ public class GTalkHandler {
 		return false;
 	}
 	
+	// Returns true if matched.
+	public static boolean processGroupChatInvitation(Message message) {
+		String chatContent = message.getBody();
+		HashMap<String, String> matchRes = GroupChatInvitation.parseRequest(chatContent);
+		
+		Log.d(TAG, "processGroupChatInvitation init.");
+		
+		if (matchRes != null) {
+			String bareAddr =  BuddyHandler.getBareAddr( message.getFrom() );
+			Log.d(TAG, "matched GroupChatInvitation received from " + bareAddr);
+			
+			mService.invitationReceived(mService.getConnection(), matchRes.get("chatroom"), bareAddr, matchRes.get("msg"), null, message);
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
 	// Returns formatted invitation string if matched, null otherwise
 	public static String processLocalServiceInvitation(Message message) {
 		String chatContent = message.getBody();
@@ -465,6 +492,8 @@ public class GTalkHandler {
 		
 		return null;
 	}
+	
+	
 	
 	// bareAddr: null to probe all flagged users (Force Update)
 	public static void sendProbe(String bareAddr) {
@@ -533,6 +562,17 @@ public class GTalkHandler {
 	public static boolean sendLocalServiceInvitation(LocalServiceItem lsi, String bareAddr, String msg) {
 		Message message = new Message("", Message.Type.chat);
 		String req = LocalServiceInvitation.buildRequest(lsi.getName(), lsi.getAddress(), lsi.getPhone(), lsi.getLocation().getLatitudeE6(), lsi.getLocation().getLongitudeE6(), msg);
+		message.setBody( req );
+		
+		message.setTo( bareAddr );
+		mService.sendPacket(message);
+		
+		return true;
+	}
+	
+	public static boolean sendGroupChatInvitation(MultiUserChat muc, String bareAddr, String msg) {
+		Message message = new Message("", Message.Type.chat);
+		String req = GroupChatInvitation.buildRequest(muc.getRoom(), msg);
 		message.setBody( req );
 		
 		message.setTo( bareAddr );

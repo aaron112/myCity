@@ -52,7 +52,6 @@ import edu.ucsd.mycity.listeners.ConnectionClient;
 import edu.ucsd.mycity.listeners.LocationClient;
 import edu.ucsd.mycity.listeners.RosterClient;
 import edu.ucsd.mycity.localservices.GPlace;
-import edu.ucsd.mycity.localservices.GPlaceDetails;
 import edu.ucsd.mycity.localservices.LocalServiceItem;
 import edu.ucsd.mycity.localservices.LocalServiceOverlayItem;
 import edu.ucsd.mycity.localservices.LocalServicePinsOverlay;

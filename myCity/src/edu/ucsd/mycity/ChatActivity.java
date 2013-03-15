@@ -19,9 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import edu.ucsd.mycity.R;
-import edu.ucsd.mycity.R.id;
-import edu.ucsd.mycity.R.layout;
-import edu.ucsd.mycity.R.menu;
 import edu.ucsd.mycity.buddy.BuddyList;
 import edu.ucsd.mycity.chat.ChatMsgArrayAdapter;
 import edu.ucsd.mycity.chat.ChatRoom;
@@ -83,7 +80,6 @@ public class ChatActivity extends Activity implements ChatClient {
 		
 		Bundle b = getIntent().getExtras();
 		mChatRoomID = b.getString("contact");
-		int mode = b.getInt("chatmode", CHAT_MODE_SINGLE);
 		
 		buildChatList();
 		
@@ -92,17 +88,21 @@ public class ChatActivity extends Activity implements ChatClient {
 			mChatRoomID = GTalkHandler.getLastMsgFrom();
 			
 			if ( mChatRoomID == null || mChatRoomID.equals("") ) {
-				if ( chatRooms.isEmpty() ) {
-					Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
-					Toast.makeText(this, "Start a new conversation from Map or Contact List",
-							Toast.LENGTH_SHORT).show();
-					finish();
-				} else {
-					Log.d(TAG, "Falling back to the first conversation on list.");
+				Log.d(TAG, "Falling back to the first conversation on list.");
+				if (chatRooms.keySet().iterator().hasNext())
 					mChatRoomID = chatRooms.keySet().iterator().next();
-				}
 			}
 		}
+		
+		if ( mChatRoomID == null || mChatRoomID.equals("") ) {
+			Log.d(TAG, "finishing because no lastmsgfrom and chat is empty.");
+			Toast.makeText(this, "Start a new conversation from Map or Contact List",
+					Toast.LENGTH_SHORT).show();
+			finish();
+			return;
+		}
+		
+		Log.i(TAG, "mChatRoomID = " + mChatRoomID);
 
 		// If chat room does not exist, create it
 		if ( !chatRooms.containsKey(mChatRoomID) ) {
@@ -192,18 +192,14 @@ public class ChatActivity extends Activity implements ChatClient {
 	    	return true;
 	    	
 	    case R.id.menu_closechat:
-	    	// TODO: Later: Close chat
-	    	/*
-	    	GTalkHandler.removeFromChatsList(contact);
+	    	GTalkHandler.removeFromChatsList(mChatRoomID);
     		buildChatList();
     		
-	    	if ( chats.isEmpty() )
+	    	if ( chatRooms.isEmpty() )
 	    		finish();
 	    	else {
-	    		contact = chats.get(0);
-	    		buildChatList();
+	    		switchChatRoom(chatRooms.keySet().iterator().next());
 	    	}
-	    	*/
 	    	
 	    	return true;
 

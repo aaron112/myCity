@@ -8,7 +8,6 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
@@ -18,7 +17,6 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.provider.ProviderManager;
-import org.jivesoftware.smackx.Form;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.provider.MUCUserProvider;
@@ -191,6 +189,11 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		AndroidConnectionConfiguration connConfig = new AndroidConnectionConfiguration(HOST, PORT, SERVICE);
 		//ConnectionConfiguration connConfig = new ConnectionConfiguration(HOST, PORT, SERVICE);
 		connection = new XMPPConnection(connConfig);
+
+		// Crucial for MultiUserChat
+		ProviderManager pm = ProviderManager.getInstance();
+		pm.addExtensionProvider("x", "http://jabber.org/protocol/muc#user", new MUCUserProvider());
+		
 		Log.i(TAG, "Connecting to " + connection.getHost());
 		try {
 			connection.connect();
@@ -263,12 +266,8 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 			chatManager = connection.getChatManager();
 			chatManager.addChatListener(this);
 			
-			// Crucial for MultiUserChat
-			ProviderManager pm = ProviderManager.getInstance();
-			pm.addExtensionProvider("x", "http://jabber.org/protocol/muc#user", new MUCUserProvider());
-			
 			// For multi-user chat
-			MultiUserChat.addInvitationListener(connection, this);
+			//MultiUserChat.addInvitationListener(connection, this);
 		}
 	}
 	
@@ -491,12 +490,13 @@ public class GTalkService extends Service implements LocationListener, ChatManag
     								String password, Message message) {
         Log.i(TAG, "Multi-chat invition received from: " + inviter);
         Log.i(TAG, "Invitation Reason: " + reason);
+        Log.i(TAG, "Password: " + password);
         
         MultiUserChat muc = new MultiUserChat(conn, room);
         
         try {
-            muc.join(GTalkHandler.getUserBareAddr(), password);  
-            //muc.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
+            muc.join(GTalkHandler.getUserBareAddr(), password);
+            
         } catch (XMPPException e) {
         	Log.e(TAG, "Unable to join chat room: " + e.toString() );
         	return;
@@ -537,6 +537,9 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		
 		if ( GTalkHandler.processGPX(message) )
 			return;		// Stop if parsed to be GPX message
+		
+		if ( GTalkHandler.processGroupChatInvitation(message) )
+			return;		// Stop if parsed to be GroupChatInvitation message
 		
 		//boolean isChat = false;
 		String dispMsg = GTalkHandler.processLocalServiceInvitation(message);
@@ -661,6 +664,13 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 	
 	public HashMap<String, ChatRoom> getChatsList() {
 		return chatsList;
+	}
+	
+	public boolean removeFromChatsList(String chatRoomID) {
+		if ( chatsList.containsKey(chatRoomID) )
+			chatsList.get(chatRoomID).closeChat();
+		
+		return ( chatsList.remove(chatRoomID) != null );
 	}
 
 }
