@@ -12,7 +12,6 @@ import android.util.Log;
 import edu.ucsd.mycity.GTalkHandler;
 import edu.ucsd.mycity.buddy.BuddyEntry;
 
-
 /**
  * Design by Contract
  * @invariant title != null, isMultiUser is boolean, either sc or muc != null
@@ -168,6 +167,7 @@ public class ChatRoom {
 		for ( BuddyEntry buddy : buddies ) {
 			addMessage(null, "Inviting: " + buddy.getUser());
 			muc.invite(buddy.getUser(), invitemsg);
+			GTalkHandler.sendGroupChatInvitation( muc, buddy.getUser(), invitemsg );
 		}
 		
 		return true;
@@ -192,5 +192,13 @@ public class ChatRoom {
 	 */
 	public ArrayList<ChatMessage> getMessages() {
 		return messages;
+	}
+	
+	/**
+	 * @pre none
+	 */
+	public void closeChat() {
+		if ( isMultiUser )
+			muc.leave();
 	}
 }

@@ -85,10 +85,11 @@ public class ProductServlet extends BaseServlet
 		String longi = req.getParameter("longitude");
 		String user = req.getParameter("user");
 		String picKey = req.getParameter("picKey");
+		String visibility = req.getParameter("public");
 		try
 		{
 			Product.createOrUpdateProduct(user, name, description, lat, longi,
-			         picKey);
+			         picKey, visibility);
 		}
 		catch (Exception e)
 		{

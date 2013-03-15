@@ -32,9 +32,11 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 
 public class AddUserContActivity extends Activity
 {
@@ -46,6 +48,7 @@ public class AddUserContActivity extends Activity
 	private EditText place_box;
 	private EditText description_box;
 	private String picPath = null;
+	private Spinner spinner;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -57,6 +60,9 @@ public class AddUserContActivity extends Activity
 
 		place_box = (EditText) findViewById(R.id.place_box);
 		description_box = (EditText) findViewById(R.id.description_box);
+
+		addItemsSpinner();
+
 		extras = getIntent().getExtras();
 
 		loadPic.setOnClickListener(new View.OnClickListener()
@@ -188,6 +194,8 @@ public class AddUserContActivity extends Activity
 					nameValuePairs.add(new BasicNameValuePair("longitude", Integer
 					         .toString(extras.getInt("longitude"))));
 					nameValuePairs.add(new BasicNameValuePair("picKey", picKey));
+					nameValuePairs.add(new BasicNameValuePair("public", spinner
+					         .getSelectedItem().toString()));
 
 					nameValuePairs.add(new BasicNameValuePair("action", "put"));
 					// picKey = null;
@@ -214,5 +222,18 @@ public class AddUserContActivity extends Activity
 
 		t.start();
 		dialog.show();
+	}
+
+	private void addItemsSpinner()
+	{
+		spinner = (Spinner) findViewById(R.id.visibilitySpinner);
+		ArrayList<String> list = new ArrayList<String>();
+		list.add("private");
+		list.add("buddies");
+		list.add("public");
+
+		ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+		         android.R.layout.simple_spinner_item, list);
+		spinner.setAdapter(dataAdapter);
 	}
 }
