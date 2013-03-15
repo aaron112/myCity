@@ -10,7 +10,12 @@ import com.google.api.client.util.Key;
 * */
 public class GPlaceDetails implements Serializable {
  
-    @Key
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Key
     public String status;
  
     @Key

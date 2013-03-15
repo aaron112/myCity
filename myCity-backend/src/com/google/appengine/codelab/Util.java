@@ -36,6 +36,7 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
  * displaying the entity in JSON format.
  * 
  */
+@SuppressWarnings("deprecation")
 public class Util {
 
   private static final Logger logger = Logger.getLogger(Util.class.getCanonicalName());

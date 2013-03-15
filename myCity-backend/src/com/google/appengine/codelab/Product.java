@@ -85,6 +85,7 @@ public class Product
 	 * @return list of items
 	 */
 
+	@SuppressWarnings("deprecation")
 	public static List<Entity> getItems(String name)
 	{
 		Query query = new Query();

@@ -22,9 +22,6 @@ import edu.ucsd.mycity.ChatActivity;
 import edu.ucsd.mycity.GTalkHandler;
 import edu.ucsd.mycity.R;
 import edu.ucsd.mycity.SettingsActivity;
-import edu.ucsd.mycity.R.id;
-import edu.ucsd.mycity.R.layout;
-import edu.ucsd.mycity.R.menu;
 import edu.ucsd.mycity.listeners.RosterClient;
 
 import android.app.Activity;

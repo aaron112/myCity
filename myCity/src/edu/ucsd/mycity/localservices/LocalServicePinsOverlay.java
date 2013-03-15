@@ -1,6 +1,5 @@
 package edu.ucsd.mycity.localservices;
 
-
 import java.util.ArrayList;
 
 import android.app.AlertDialog;
@@ -11,7 +10,6 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;

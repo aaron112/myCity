@@ -91,6 +91,7 @@ public class Item {
    * @param itemName: get itemName
    * @return  item entity
    */
+  @SuppressWarnings("deprecation")
   public static Entity getSingleItem(String itemName) {
     Query query = new Query("Item");
     query.addFilter("name", FilterOperator.EQUAL, itemName);

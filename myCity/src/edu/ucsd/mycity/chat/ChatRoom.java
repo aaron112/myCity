@@ -18,6 +18,7 @@ import edu.ucsd.mycity.buddy.BuddyEntry;
  * @author Aaron
  *
  */
+@SuppressWarnings("unused")
 public class ChatRoom {
 	public class ChatMessage {
 		private BuddyEntry from;
