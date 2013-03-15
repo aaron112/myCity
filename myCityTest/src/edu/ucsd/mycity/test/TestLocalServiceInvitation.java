@@ -1,11 +1,9 @@
 package edu.ucsd.mycity.test;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.test.AndroidTestCase;
 
-import edu.ucsd.mycity.GooglePlacesHandler;
 import edu.ucsd.mycity.utils.LocalServiceInvitation;
 
 public class TestLocalServiceInvitation extends AndroidTestCase
