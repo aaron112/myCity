@@ -45,6 +45,32 @@
     <string name="pref_header_notifications">Notifications</string>
     <string name="pref_title_msg_notification">Message Notification</string>
     <string name="pref_description_msg_notification">Notification sound on new message</string>
+    
+    <string name="pref_title_proxmity_range">Range for Proxmity Alert</string>
+    <string name="pref_description_proxmity_range">Distance to activate notification when a buddy comes close</string>
+    <string name="pref_default_proxmity_range">10</string>
+    
+    <string-array name="pref_proxmity_range_titles">
+        <item>10 Meters</item>
+        <item>100 Meters</item>
+        <item>500 Meters</item>
+        <item>1 Kilometer</item>
+        <item>5 Kilometers</item>
+        <item>Feature Disabled</item>
+    </string-array>
+    
+    <string-array name="pref_proxmity_range_values">
+        <item>10</item>
+        <item>100</item>
+        <item>500</item>
+        <item>1000</item>
+        <item>5000</item>
+        <item>-1</item>
+    </string-array>
+    
+    <string name="pref_title_proxmity_notification">Proxmity Notification</string>
+    <string name="pref_description_proxmity_notification">Notification sound when a buddy come close</string>
+    
     <!--  Examples
 
     <string-array name="pref_example_list_titles">

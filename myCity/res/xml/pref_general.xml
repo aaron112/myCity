@@ -44,6 +44,24 @@
                 android:title="@string/pref_title_msg_notification"
                 android:key="msg_notification"
                 android:ringtoneType="notification" />
+        
+        <ListPreference
+		        android:key="proxmity_range"
+		        android:title="@string/pref_title_proxmity_range"
+		        android:summary="@string/pref_description_proxmity_range"
+		        android:entries="@array/pref_proxmity_range_titles"
+		        android:entryValues="@array/pref_proxmity_range_values"
+		        android:defaultValue="@string/pref_default_proxmity_range"
+		        android:negativeButtonText="@null"
+		        android:positiveButtonText="@null" />
+        
+        <RingtonePreference
+            	android:showDefault="true"
+                android:name="@string/pref_title_proxmity_notification"
+                android:summary="@string/pref_description_proxmity_notification"
+                android:title="@string/pref_title_proxmity_notification"
+                android:key="proxmity_notification"
+                android:ringtoneType="notification" />
     </PreferenceCategory>
             
 

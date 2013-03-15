@@ -444,6 +444,8 @@ public class GTalkHandler {
 										 matchRes.get(2));
 			notifyBuddyLocationClients();
 			
+			mService.processProximity(bareAddr);
+			
 			return true;
 		}
 		

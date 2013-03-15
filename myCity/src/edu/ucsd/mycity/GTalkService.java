@@ -369,7 +369,8 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 	 * @param bareAddr
 	 * @param msg
 	 */
-	private void makeChatNotification(BuddyEntry buddy, String msg, int chattype, String multiChatRoomID) {
+	private void makeChatNotification(BuddyEntry buddy, String msg, int chattype, String multiChatRoomID)
+	{
 		String type;
 
         Log.i(TAG, "makeChatNotification init.");
@@ -423,6 +424,55 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 		mNotificationManager.notify(1, mBuilder.build());
 
         Log.i(TAG, "makeChatNotification done.");
+	}
+	
+	private void makeProximityNotification(BuddyEntry buddy)
+	{
+
+        Log.i(TAG, "makeProximityNotification init.");
+		
+		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
+		        .setSmallIcon(R.drawable.new_message_2, 3) //not sure
+		        .setContentTitle(buddy.getName())
+		        /*.setContentText(msg)*/
+		        .setContentInfo("myCity")
+		        .setSubText("")
+		        .setTicker(buddy.getName()+" is near you!")
+		        .setAutoCancel(true);
+		
+		// Make some noise!
+		String ringtoneUrl = prefs.getString("proxmity_notification", "");
+		if ( !ringtoneUrl.equals("") )
+			mBuilder.setSound(Uri.parse(ringtoneUrl));
+
+		// Creates an explicit intent for an Activity in your app
+		Intent resultIntent = new Intent(this, ChatActivity.class);
+		
+    	Bundle b = new Bundle();
+    	b.putString("contact", buddy.getUser()); //i think this is what it does
+    	resultIntent.putExtras(b);
+		
+		// The stack builder object will contain an artificial back stack for the
+		// started Activity.
+		// This ensures that navigating backward from the Activity leads out of
+		// your application to the Home screen.
+		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+		// Adds the back stack for the Intent (but not the Intent itself)
+		stackBuilder.addParentStack(ChatActivity.class);
+		// Adds the Intent that starts the Activity to the top of the stack
+		stackBuilder.addNextIntent(resultIntent);
+		PendingIntent resultPendingIntent =
+		        stackBuilder.getPendingIntent(
+		            0,
+		            PendingIntent.FLAG_UPDATE_CURRENT
+		        );
+		mBuilder.setContentIntent(resultPendingIntent);
+		NotificationManager mNotificationManager =
+		    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		// mId allows you to update the notification later on.
+		mNotificationManager.notify(1, mBuilder.build());
+
+        Log.i(TAG, "makeProximityNotification done.");
 	}
 	
 	/**
@@ -513,6 +563,19 @@ public class GTalkService extends Service implements LocationListener, ChatManag
 
 		notifyChat(muc.getRoom());
     }
+    
+    
+    public void processProximity(String bareAddr) {
+		Location currentLocation = getLastKnownLocation();
+		
+		BuddyEntry buddy;
+		buddy = BuddyHandler.getBuddy(bareAddr);
+		
+		int range = Integer.parseInt( prefs.getString("proxmity_range", "-1") );
+		
+		if ( currentLocation.distanceTo(buddy.getLocation()) < range)
+			makeProximityNotification(buddy);
+	}
 
 	@Override
 	// ******* MessageListener *******
